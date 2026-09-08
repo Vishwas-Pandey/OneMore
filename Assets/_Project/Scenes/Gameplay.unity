@@ -1380,14 +1380,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AdManager
   config:
-    androidRewardedAdUnitId: ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-    androidInterstitialAdUnitId: ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+    androidRewardedAdUnitId: ca-app-pub-2894715849700422/5048365394
+    androidInterstitialAdUnitId: ca-app-pub-2894715849700422/2781294704
+    androidBannerAdUnitId: ca-app-pub-2894715849700422/6528968020
     iosRewardedAdUnitId: ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
     iosInterstitialAdUnitId: ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
+    iosBannerAdUnitId: ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
     enableAds: 1
     maxContinuesPerRun: 1
     interstitialFrequency: 3
-  useTestAds: 1
+  useTestAds: 0
   logAdEvents: 1
 --- !u!114 &774566677
 MonoBehaviour:

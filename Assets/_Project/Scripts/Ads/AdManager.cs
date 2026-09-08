@@ -17,10 +17,12 @@ public class AdManager : MonoBehaviour
         [Header("Production Ad Unit IDs - Android")]
         public string androidRewardedAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY";
         public string androidInterstitialAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY";
+        public string androidBannerAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY";
 
         [Header("Production Ad Unit IDs - iOS")]
         public string iosRewardedAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ";
         public string iosInterstitialAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ";
+        public string iosBannerAdUnitId = "ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ";
 
         public bool enableAds = true;
         public int maxContinuesPerRun = 1;
@@ -33,6 +35,8 @@ public class AdManager : MonoBehaviour
     private const string AndroidTestInterstitialId = "ca-app-pub-3940256099942544/1033173712";
     private const string IosTestRewardedId = "ca-app-pub-3940256099942544/1712485313";
     private const string IosTestInterstitialId = "ca-app-pub-3940256099942544/4411468910";
+    private const string AndroidTestBannerId = "ca-app-pub-3940256099942544/6300978111";
+    private const string IosTestBannerId = "ca-app-pub-3940256099942544/2934735716";
 
     public static AdManager Instance { get; private set; }
 
@@ -42,8 +46,10 @@ public class AdManager : MonoBehaviour
 
     private RewardedAd rewardedAd;
     private InterstitialAd interstitialAd;
+    private BannerView bannerView;
     private Action onRewardedAdSuccess;
     private int continueCount;
+    private bool bannerRequestedVisible;
 
     private void Awake()
     {
@@ -69,6 +75,7 @@ public class AdManager : MonoBehaviour
                 if (logAdEvents) Debug.Log("[AdManager] Mobile Ads SDK initialized.");
                 LoadRewardedAd();
                 LoadInterstitialAd();
+                LoadBannerAd();
             });
         });
     }
@@ -104,6 +111,23 @@ public class AdManager : MonoBehaviour
         return config.iosInterstitialAdUnitId;
 #else
         return config.androidInterstitialAdUnitId;
+#endif
+    }
+
+    private string BannerAdUnitId()
+    {
+        if (useTestAds)
+        {
+#if UNITY_IOS
+            return IosTestBannerId;
+#else
+            return AndroidTestBannerId;
+#endif
+        }
+#if UNITY_IOS
+        return config.iosBannerAdUnitId;
+#else
+        return config.androidBannerAdUnitId;
 #endif
     }
 
@@ -161,6 +185,53 @@ public class AdManager : MonoBehaviour
                 if (logAdEvents) Debug.Log("[AdManager] Interstitial ad loaded.");
             });
         });
+    }
+
+    /// <summary>
+    /// Banners are never shown during actual gameplay (per design: they'd sit
+    /// on top of the play area) - only on Main Menu, the Gameplay countdown,
+    /// and the Game Over panel. ShowBannerAd()/HideBannerAd() just toggle
+    /// visibility of an already-loaded banner rather than reloading it, since
+    /// banners are meant to stay loaded and be shown/hidden as the player
+    /// moves between those screens within a single scene load.
+    /// </summary>
+    public void LoadBannerAd()
+    {
+        if (!config.enableAds) return;
+
+        bannerView?.Destroy();
+        bannerView = new BannerView(BannerAdUnitId(), AdSize.Banner, AdPosition.Bottom);
+        bannerView.OnBannerAdLoaded += () =>
+        {
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.Log("[AdManager] Banner ad loaded.");
+                if (!bannerRequestedVisible) bannerView.Hide();
+            });
+        };
+        bannerView.OnBannerAdLoadFailed += (error) =>
+        {
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.LogWarning($"[AdManager] Banner ad failed to load: {error}");
+            });
+        };
+
+        bannerView.LoadAd(new AdRequest());
+    }
+
+    public void ShowBannerAd()
+    {
+        bannerRequestedVisible = true;
+        if (!config.enableAds) return;
+        if (bannerView == null) LoadBannerAd();
+        bannerView?.Show();
+    }
+
+    public void HideBannerAd()
+    {
+        bannerRequestedVisible = false;
+        bannerView?.Hide();
     }
 
     public void ShowRewardedAd(Action onComplete)
@@ -279,5 +350,6 @@ public class AdManager : MonoBehaviour
     {
         rewardedAd?.Destroy();
         interstitialAd?.Destroy();
+        bannerView?.Destroy();
     }
 }

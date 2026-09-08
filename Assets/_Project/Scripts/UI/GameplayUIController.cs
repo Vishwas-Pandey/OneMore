@@ -66,6 +66,8 @@ public class GameplayUIController : MonoBehaviour
         GameManager.Instance?.StartGame();
         player.ResetPlayer(playerStartPosition);
 
+        AdManager.Instance?.ShowBannerAd();
+
         countdownOverlay.SetActive(true);
         for (int i = Mathf.CeilToInt(countdownSeconds); i > 0; i--)
         {
@@ -73,6 +75,10 @@ public class GameplayUIController : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
         countdownOverlay.SetActive(false);
+
+        // Banners are only for the countdown/menu/game-over screens, never
+        // over the play area itself.
+        AdManager.Instance?.HideBannerAd();
 
         hud.SetActive(true);
         GameManager.Instance?.BeginPlaying();
@@ -85,6 +91,7 @@ public class GameplayUIController : MonoBehaviour
         hud.SetActive(false);
         gameOverPanel.SetActive(true);
         obstacleSpawner.StopSpawning();
+        AdManager.Instance?.ShowBannerAd();
 
         if (finalScoreText != null)
         {
@@ -114,6 +121,7 @@ public class GameplayUIController : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
             hud.SetActive(true);
+            AdManager.Instance?.HideBannerAd();
             player.ResetPlayer(playerStartPosition);
             player.BeginFlight();
             obstacleSpawner.ResetSpawner();

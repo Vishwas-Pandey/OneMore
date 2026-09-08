@@ -60,6 +60,7 @@ public class MainMenuController : MonoBehaviour
 
         AdManager.Instance?.LoadRewardedAd();
         AdManager.Instance?.LoadInterstitialAd();
+        AdManager.Instance?.ShowBannerAd();
 
         // iOS: request the App Tracking Transparency prompt a beat after the
         // menu appears, per Apple's guidance to not show it on the very first
