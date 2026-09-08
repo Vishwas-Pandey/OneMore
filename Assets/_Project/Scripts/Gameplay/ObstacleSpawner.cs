@@ -143,7 +143,6 @@ public class ObstacleSpawner : MonoBehaviour
             {
                 pair.scored = true;
                 scoreManager.AddScore(1);
-                GameManager.Instance?.AddScore(1);
             }
         }
     }

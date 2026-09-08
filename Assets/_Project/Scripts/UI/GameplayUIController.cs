@@ -122,6 +122,7 @@ public class GameplayUIController : MonoBehaviour
             gameOverPanel.SetActive(false);
             hud.SetActive(true);
             AdManager.Instance?.HideBannerAd();
+            GameManager.Instance?.BeginPlaying();
             player.ResetPlayer(playerStartPosition);
             player.BeginFlight();
             obstacleSpawner.ResetSpawner();

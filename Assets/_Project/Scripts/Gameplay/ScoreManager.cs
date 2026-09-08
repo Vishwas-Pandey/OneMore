@@ -22,6 +22,7 @@ public class ScoreManager : MonoBehaviour
     public event System.Action OnNewBest;
 
     private Coroutine newBestCoroutine;
+    private bool isNewBest;
     private int comboCount;
     private float comboResetTimer;
     private const float ComboWindow = 0.5f;
@@ -74,6 +75,7 @@ public class ScoreManager : MonoBehaviour
         if (currentScore > bestScore)
         {
             bestScore = currentScore;
+            isNewBest = true;
             OnBestScoreChanged?.Invoke(bestScore);
             SaveSystem.SaveBestScore(bestScore);
 
@@ -124,6 +126,7 @@ public class ScoreManager : MonoBehaviour
     public void ResetScore()
     {
         currentScore = 0;
+        isNewBest = false;
         comboCount = 0;
         comboResetTimer = 0f;
         UpdateScoreUI();
@@ -142,4 +145,5 @@ public class ScoreManager : MonoBehaviour
     public int GetCurrentScore() => currentScore;
     public int GetBestScore() => bestScore;
     public int GetComboCount() => comboCount;
+    public bool IsNewBest() => isNewBest;
 }

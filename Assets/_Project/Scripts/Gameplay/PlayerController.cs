@@ -24,6 +24,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private ParticleSystem deathParticles;
     [SerializeField] private Animator animator;
 
+    [Header("Scene References")]
+    [SerializeField] private ScoreManager scoreManager;
+
     private Rigidbody2D rb;
 
     public event System.Action OnJump;
@@ -143,7 +146,10 @@ public class PlayerController : MonoBehaviour
         AudioManager.Instance?.PlayGameOverSound();
 
         OnDeath?.Invoke();
-        GameManager.Instance?.GameOver();
+
+        int finalScore = scoreManager != null ? scoreManager.GetCurrentScore() : 0;
+        bool isNewBest = scoreManager != null && scoreManager.IsNewBest();
+        GameManager.Instance?.GameOver(finalScore, isNewBest);
     }
 
     public void ResetPlayer(Vector3 position)

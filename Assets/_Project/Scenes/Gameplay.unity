@@ -438,11 +438,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   currentState: 0
-  score: 0
-  bestScore: 0
-  gameSpeed: 1
-  maxGameSpeed: 2.5
-  speedRampPerPoint: 0.02
   isNewBest: 0
 --- !u!4 &150418738
 Transform:
@@ -1660,19 +1655,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 839497351}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 19457492}
-        m_TargetAssemblyTypeName: GameplayUIController, Assembly-CSharp
-        m_MethodName: OnMenuClicked
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &859595275
 GameObject:
   m_ObjectHideFlags: 0
@@ -1930,19 +1913,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 911841803}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 19457492}
-        m_TargetAssemblyTypeName: GameplayUIController, Assembly-CSharp
-        m_MethodName: OnContinueClicked
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &955653644
 GameObject:
   m_ObjectHideFlags: 0
@@ -2378,19 +2349,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1332199899}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 19457492}
-        m_TargetAssemblyTypeName: GameplayUIController, Assembly-CSharp
-        m_MethodName: OnRestartClicked
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &1474966022
 GameObject:
   m_ObjectHideFlags: 0
@@ -3343,6 +3302,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3804077262892288832, guid: d3fa6ab50bdbf4c6eab7c99c7ac263d8, type: 3}
+      propertyPath: scoreManager
+      value: 
+      objectReference: {fileID: 1198905090}
     - target: {fileID: 4880618509870878086, guid: d3fa6ab50bdbf4c6eab7c99c7ac263d8, type: 3}
       propertyPath: m_Name
       value: Player

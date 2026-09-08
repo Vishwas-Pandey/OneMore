@@ -305,6 +305,13 @@ public class AdManager : MonoBehaviour
             MainThreadDispatcher.Enqueue(() =>
             {
                 if (logAdEvents) Debug.Log("[AdManager] Rewarded ad closed.");
+                // If the player closed the ad before finishing it, the
+                // reward callback below never fired and onRewardedAdSuccess
+                // is still pending - resolve it now so the caller isn't left
+                // stuck on the Game Over screen with its one continue
+                // already spent for nothing.
+                onRewardedAdSuccess?.Invoke();
+                onRewardedAdSuccess = null;
                 LoadRewardedAd();
             });
         };
