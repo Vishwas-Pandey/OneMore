@@ -18,6 +18,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button soundToggleButton;
     [SerializeField] private Button musicToggleButton;
     [SerializeField] private Button hapticsToggleButton;
+    [SerializeField] private Button exitButton;
 
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI bestScoreText;
@@ -106,6 +107,22 @@ public class MainMenuController : MonoBehaviour
         if (soundToggleButton != null) soundToggleButton.onClick.AddListener(ToggleSound);
         if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
         if (hapticsToggleButton != null) hapticsToggleButton.onClick.AddListener(ToggleHaptics);
+        if (exitButton != null) exitButton.onClick.AddListener(OnExitClicked);
+    }
+
+    public void OnExitClicked()
+    {
+        PlayClickSound();
+        QuitApplication();
+    }
+
+    private void QuitApplication()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     public void OnPlayClicked()
@@ -238,7 +255,7 @@ public class MainMenuController : MonoBehaviour
             }
             else
             {
-                Application.Quit();
+                QuitApplication();
             }
         }
     }
