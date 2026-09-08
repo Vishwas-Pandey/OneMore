@@ -37,8 +37,47 @@ public static class BuildScript
         BuildAndroid("Release", BuildOptions.None, true);
     }
 
+    /// <summary>
+    /// Release builds need the keystore/key passwords, but those must never be
+    /// hardcoded or committed. Unity does not persist PlayerSettings.Android.
+    /// keystorePass/keyaliasPass to ProjectSettings.asset, so they have to be
+    /// supplied fresh each build via environment variables the calling shell
+    /// sets transiently (see RELEASE_SIGNING.md) — never printed or logged here.
+    /// </summary>
+    private static void ApplySigningCredentialsIfAvailable()
+    {
+        if (!PlayerSettings.Android.useCustomKeystore) return;
+
+        string storePass = Environment.GetEnvironmentVariable("ONEMORE_KEYSTORE_PASS");
+        string keyPass = Environment.GetEnvironmentVariable("ONEMORE_KEY_ALIAS_PASS");
+
+        if (string.IsNullOrEmpty(storePass) || string.IsNullOrEmpty(keyPass))
+        {
+            Debug.LogWarning("[BuildScript] Custom keystore is configured but ONEMORE_KEYSTORE_PASS / " +
+                              "ONEMORE_KEY_ALIAS_PASS are not set in the environment - the release build " +
+                              "will fail to sign. See RELEASE_SIGNING.md.");
+            return;
+        }
+
+        PlayerSettings.Android.keystorePass = storePass;
+        PlayerSettings.Android.keyaliasPass = keyPass;
+
+        // Gradle resolves a relative keystoreName against its generated module
+        // directory (Library/Bee/Android/Prj/IL2CPP/Gradle/launcher/...), not
+        // the project root, so a relative path here fails signing even though
+        // it's the right value for anyone reading ProjectSettings.asset.
+        // Resolve to an absolute path in memory only - never written back to
+        // the committed asset, so the repo stays portable across machines.
+        if (!Path.IsPathRooted(PlayerSettings.Android.keystoreName))
+        {
+            PlayerSettings.Android.keystoreName = Path.GetFullPath(PlayerSettings.Android.keystoreName);
+        }
+    }
+
     private static void BuildAndroid(string variant, BuildOptions options, bool buildAppBundle)
     {
+        ApplySigningCredentialsIfAvailable();
+
         string outputDir = "Builds/Android";
         Directory.CreateDirectory(outputDir);
 

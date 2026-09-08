@@ -213,6 +213,8 @@ public class AdManager : MonoBehaviour
 
     public void ResetContinueCount() => continueCount = 0;
 
+    public int InterstitialFrequency => config.interstitialFrequency;
+
     private void RegisterRewardedEventHandlers(RewardedAd ad)
     {
         ad.OnAdFullScreenContentClosed += () =>

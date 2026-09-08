@@ -118,7 +118,8 @@ public class MainMenuController : MonoBehaviour
         totalGamesPlayed++;
         SaveSystem.IncrementTotalGames();
 
-        if (totalGamesPlayed % 3 == 0)
+        int frequency = AdManager.Instance != null ? AdManager.Instance.InterstitialFrequency : 3;
+        if (frequency > 0 && totalGamesPlayed % frequency == 0)
         {
             AdManager.Instance?.ShowInterstitialAd(StartGame);
         }

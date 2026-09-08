@@ -46,9 +46,27 @@ public class GameManager : MonoBehaviour
 
     private void InitializeSystems()
     {
-        // Order matters: analytics/ads should exist before anything reports events.
+        // Order matters: analytics should exist before anything reports events.
         if (AnalyticsManager.Instance != null) AnalyticsManager.Instance.Initialize();
-        if (AdManager.Instance != null) AdManager.Instance.Initialize();
+
+        // UMP consent must be resolved before the Mobile Ads SDK initializes
+        // (Google policy for EEA/UK users). Gathering never blocks gameplay -
+        // ad init is simply skipped for this session if consent isn't granted
+        // or the flow fails outright (e.g. no network at launch).
+        if (ConsentManager.Instance != null)
+        {
+            ConsentManager.Instance.GatherConsent(() =>
+            {
+                if (ConsentManager.Instance.CanRequestAds())
+                {
+                    AdManager.Instance?.Initialize();
+                }
+            });
+        }
+        else
+        {
+            AdManager.Instance?.Initialize();
+        }
     }
 
     public void StartGame()
