@@ -19,22 +19,36 @@ public class MainThreadDispatcher : MonoBehaviour
     private static MainThreadDispatcher instance;
     private readonly Queue<Action> pending = new Queue<Action>();
 
-    public static void Enqueue(Action action)
-    {
-        if (action == null) return;
-        EnsureInstance();
-        lock (instance.pending)
-        {
-            instance.pending.Enqueue(action);
-        }
-    }
-
-    private static void EnsureInstance()
+    /// <summary>
+    /// Creates the singleton eagerly at startup, on the main thread, before
+    /// any background-thread SDK callback gets a chance to call Enqueue()
+    /// first - lazily creating it from Enqueue() would itself call
+    /// `new GameObject(...)` from whatever thread called Enqueue(), which
+    /// throws the exact same main-thread-only exception this class exists
+    /// to avoid (confirmed on-device).
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
     {
         if (instance != null) return;
         var go = new GameObject("MainThreadDispatcher");
         instance = go.AddComponent<MainThreadDispatcher>();
         DontDestroyOnLoad(go);
+    }
+
+    public static void Enqueue(Action action)
+    {
+        if (action == null) return;
+        if (instance == null)
+        {
+            Debug.LogWarning("[MainThreadDispatcher] Enqueue called before Bootstrap ran; invoking immediately.");
+            action.Invoke();
+            return;
+        }
+        lock (instance.pending)
+        {
+            instance.pending.Enqueue(action);
+        }
     }
 
     private void Update()
