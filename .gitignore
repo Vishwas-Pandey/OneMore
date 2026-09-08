@@ -1,0 +1,73 @@
+# macOS
+.DS_Store
+
+# ===== Unity generated / cache =====
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+.utmp/
+sysinfo.txt
+*.stackdump
+crashlytics-build.properties
+*.apk.meta
+
+# Never keep two copies of import settings caches
+[Aa]uto[Gg]enerated/
+
+# Visual Studio / Rider / VSCode metadata
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D generated meta files that shouldn't be versioned
+ExportedObj/
+.consulo/
+
+# Unity3D generated crash reports
+sysinfo.txt
+
+# Builds — regenerated locally/CI, large binaries don't belong in source control
+Builds/
+
+# UserSettings (per-machine editor prefs, layouts, etc.)
+UserSettings/
+
+# Generated iOS Xcode project build artifacts (kept separately if ever exported again)
+*.xcuserstate
+*.xcuserdatad/
+DerivedData/
+
+# ===== Secrets / signing — NEVER commit =====
+keystore/
+*.keystore
+*.jks
+*.p12
+*.pem
+*.mobileprovision
+*.cer
+*.p8
+**/keystore.properties
+**/*secrets*
+**/*.env
+.env
+.env.*
+google-services.json
+GoogleService-Info.plist
+service-account*.json

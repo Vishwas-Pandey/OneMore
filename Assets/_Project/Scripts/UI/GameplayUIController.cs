@@ -1,0 +1,127 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using System.Collections;
+using TMPro;
+
+/// <summary>
+/// Wires the Gameplay scene together: countdown overlay, game-over panel,
+/// restart/continue buttons, and the collision -> game over -> UI flow.
+/// Not part of the original single-file script list, but required for the
+/// systems above (GameManager, ScoreManager, PlayerController, AdManager) to
+/// actually form a playable loop instead of disconnected components.
+/// </summary>
+public class GameplayUIController : MonoBehaviour
+{
+    [Header("Scene References")]
+    [SerializeField] private PlayerController player;
+    [SerializeField] private ObstacleSpawner obstacleSpawner;
+    [SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private Vector3 playerStartPosition = new Vector3(-3f, 0f, 0f);
+
+    [Header("Countdown")]
+    [SerializeField] private GameObject countdownOverlay;
+    [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] private float countdownSeconds = 3f;
+
+    [Header("Game Over Panel")]
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TextMeshProUGUI finalScoreText;
+    [SerializeField] private GameObject newBestBadge;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button continueButton;
+    [SerializeField] private Button menuButton;
+
+    [Header("HUD")]
+    [SerializeField] private GameObject hud;
+
+    private void Awake()
+    {
+        if (restartButton != null) restartButton.onClick.AddListener(OnRestartClicked);
+        if (continueButton != null) continueButton.onClick.AddListener(OnContinueClicked);
+        if (menuButton != null) menuButton.onClick.AddListener(OnMenuClicked);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameOver += HandleGameOver;
+        }
+    }
+
+    private void Start()
+    {
+        gameOverPanel.SetActive(false);
+        hud.SetActive(false);
+        AdManager.Instance?.ResetContinueCount();
+
+        StartCoroutine(RunCountdown());
+    }
+
+    private IEnumerator RunCountdown()
+    {
+        GameManager.Instance?.StartGame();
+        player.ResetPlayer(playerStartPosition);
+
+        countdownOverlay.SetActive(true);
+        for (int i = Mathf.CeilToInt(countdownSeconds); i > 0; i--)
+        {
+            if (countdownText != null) countdownText.text = i.ToString();
+            yield return new WaitForSeconds(1f);
+        }
+        countdownOverlay.SetActive(false);
+
+        hud.SetActive(true);
+        GameManager.Instance?.BeginPlaying();
+    }
+
+    private void HandleGameOver()
+    {
+        hud.SetActive(false);
+        gameOverPanel.SetActive(true);
+        obstacleSpawner.StopSpawning();
+
+        if (finalScoreText != null)
+        {
+            finalScoreText.text = scoreManager.GetCurrentScore().ToString("D4");
+        }
+
+        if (newBestBadge != null)
+        {
+            newBestBadge.SetActive(GameManager.Instance != null && GameManager.Instance.IsNewBest());
+        }
+
+        if (continueButton != null)
+        {
+            continueButton.gameObject.SetActive(AdManager.Instance != null && AdManager.Instance.CanContinueRun());
+        }
+    }
+
+    public void OnRestartClicked()
+    {
+        AnalyticsManager.TrackRestartPressed();
+        SceneManager.LoadScene("Gameplay");
+    }
+
+    public void OnContinueClicked()
+    {
+        AdManager.Instance?.ShowRewardedAd(() =>
+        {
+            gameOverPanel.SetActive(false);
+            hud.SetActive(true);
+            player.ResetPlayer(playerStartPosition);
+            obstacleSpawner.ResetSpawner();
+        });
+    }
+
+    public void OnMenuClicked()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    private void OnDestroy()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameOver -= HandleGameOver;
+        }
+    }
+}
