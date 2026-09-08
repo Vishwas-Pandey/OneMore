@@ -1,32 +1,28 @@
-# Privacy Policy — One More
+# Privacy Policy — Flying Bird
 
-**Last updated: [DATE YOU PUBLISH THIS]**
+**Last updated: September 9, 2026**
 
-This Privacy Policy describes how the "One More" mobile game ("the App", "we", "us") handles information. It is based on exactly what the App and the third-party services it uses actually do as of this writing — nothing here describes a feature the App does not have.
-
-> **Before publishing:** replace every `[BRACKETED PLACEHOLDER]` below with real information. Nothing was invented on your behalf — these are the fields only you can fill in (your legal/developer name, contact address, jurisdiction, etc.).
-
----
+This Privacy Policy describes how the "Flying Bird" mobile game ("the App", "we", "us") handles information. It describes exactly what the App and the third-party services it uses actually do as of this writing — nothing here describes a feature the App does not have.
 
 ## 1. Who this policy covers
 
-This policy applies to the "One More" app, developed by **[YOUR NAME OR STUDIO/COMPANY NAME]**, available on Google Play (and, if later published, the Apple App Store).
+This policy applies to the "Flying Bird" app, developed by **Virevia**, available on Google Play.
 
-Contact: **[YOUR SUPPORT EMAIL ADDRESS]**
-Developer address (if required by your jurisdiction/store): **[YOUR ADDRESS, OR STATE "NOT APPLICABLE" IF NOT REQUIRED]**
+Contact: **sharwanvij211@gmail.com**
 
 ## 2. What information is collected
 
-**One More does not require an account, and does not ask you for your name, email, or any personal contact information.**
+**Flying Bird does not require an account, and does not ask you for your name, email, or any personal contact information.**
 
 ### 2.1 Information the App itself stores (on your device only)
+
 - Your best score, total games played, and total score — saved locally on your device only (`Application.persistentDataPath`, a private app-storage location). This data is **never transmitted anywhere** by the App itself; it exists only so your progress persists between sessions on the same device. Uninstalling the App deletes it.
 - Your sound/music/haptics on-off preferences — same local-only storage.
 
 ### 2.2 Information collected by third-party services the App uses
 
 **Google AdMob (advertising)**
-The App shows ads (rewarded video and interstitial ads) via Google's AdMob/Google Mobile Ads SDK. To do this, Google's SDK may collect:
+The App shows ads (banner, interstitial, and rewarded video ads) via Google's AdMob/Google Mobile Ads SDK. To do this, Google's SDK may collect:
 - Advertising identifiers (e.g. Android Advertising ID / Google Advertising ID)
 - Device information (device type, OS version, general device attributes)
 - App interaction data related to ad delivery and measurement (e.g. which ads were shown/clicked)
@@ -35,9 +31,10 @@ The App shows ads (rewarded video and interstitial ads) via Google's AdMob/Googl
 This data is collected and processed by Google, not by us directly, under Google's own privacy policy: https://policies.google.com/privacy
 
 **Consent (EEA/UK/other applicable regions)**
-The App uses Google's User Messaging Platform (UMP) to ask for your consent to personalized advertising where required by law (for example, under GDPR for users in the European Economic Area and UK). If you decline or an applicable law otherwise requires it, you may still see ads, but they will not be personalized based on your advertising identifier. You can change this choice later from **[LOCATION OF YOUR "RESET AD CONSENT" SETTING, ONCE YOU ADD ONE — SEE DEPLOYMENT_STATUS.md]**.
+The App uses Google's User Messaging Platform (UMP) to ask for your consent to personalized advertising where required by law (for example, under GDPR for users in the European Economic Area and UK). If you decline or an applicable law otherwise requires it, you may still see ads, but they will not be personalized based on your advertising identifier. You can change this choice at any time from **Main Menu → Settings → Reset Ad Consent**.
 
 ### 2.3 What is NOT collected
+
 The App does not collect and does not request: your name, email address, phone number, contacts, precise/GPS location, photos, microphone/camera access, or any account/login information. As of this version, no analytics or crash-reporting service is actively transmitting data off-device (see Section 3).
 
 ## 3. Analytics
@@ -54,7 +51,7 @@ The App is a native mobile game, not a website, and does not use cookies. Third-
 
 ## 6. Children's privacy
 
-One More is not directed at children under 13 (or the equivalent minimum age in your region) and we do not knowingly collect personal information from children. If you believe a child has provided us with information, contact us at **[YOUR SUPPORT EMAIL]** and we will address it. **[IF YOU LATER INTEND TO TARGET THE APP AT CHILDREN VIA GOOGLE PLAY FAMILIES / APP STORE KIDS CATEGORY, YOU MUST FOLLOW A DIFFERENT, STRICTER COMPLIANCE PATH — INCLUDING RESTRICTING ADS TO NON-PERSONALIZED/CHILD-DIRECTED ADS ONLY. THIS DRAFT ASSUMES A GENERAL-AUDIENCE APP, NOT A CHILDREN'S APP.]**
+Flying Bird is a general-audience app and is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with information, contact us at **sharwanvij211@gmail.com** and we will address it.
 
 ## 7. Data retention
 
@@ -63,7 +60,7 @@ One More is not directed at children under 13 (or the equivalent minimum age in 
 
 ## 8. Your choices
 
-- You can reset your ad-personalization consent choice at any time via **[SETTINGS LOCATION, ONCE ADDED]**.
+- You can reset your ad-personalization consent choice at any time via **Main Menu → Settings → Reset Ad Consent**.
 - You can request that Google limit ad tracking via your device's own OS-level advertising settings (e.g. Android Settings → Google → Ads → "Opt out of Ads Personalization").
 - Uninstalling the App removes all locally-stored save data (Section 2.1) from your device.
 
@@ -71,7 +68,7 @@ One More is not directed at children under 13 (or the equivalent minimum age in 
 
 | Service | Purpose | Their privacy policy |
 |---|---|---|
-| Google AdMob / Google Mobile Ads SDK | Serving ads (rewarded + interstitial) | https://policies.google.com/privacy |
+| Google AdMob / Google Mobile Ads SDK | Serving ads (banner, interstitial, rewarded) | https://policies.google.com/privacy |
 | Google User Messaging Platform (UMP) | Gathering ad-consent choices where legally required | https://policies.google.com/privacy |
 
 ## 10. Changes to this policy
@@ -80,11 +77,4 @@ We may update this policy as the App changes (for example, if we add an analytic
 
 ## 11. Contact
 
-Questions about this policy or your data: **[YOUR SUPPORT EMAIL ADDRESS]**
-
----
-
-### Publishing note (delete this section once done)
-This file is a local draft, not a public policy. Google Play (and Apple, if you publish there) requires a **live, public HTTPS URL** to a privacy policy — this Markdown file in your project repo does not satisfy that requirement on its own. Publish the finished text somewhere with a stable public URL (a simple static page, a GitHub Pages page, a page on your own site, etc.), fill in every bracketed placeholder first, and put that URL into Play Console under **App content → Privacy policy**. See `PLAY_CONSOLE_MANUAL_STEPS.md`.
-
-**PRIVACY POLICY PUBLIC URL REQUIRED** before this app can be published on Google Play.
+Questions about this policy or your data: **sharwanvij211@gmail.com**
