@@ -31,7 +31,7 @@ The App shows ads (banner, interstitial, and rewarded video ads) via Google's Ad
 This data is collected and processed by Google, not by us directly, under Google's own privacy policy: https://policies.google.com/privacy
 
 **Consent (EEA/UK/other applicable regions)**
-The App uses Google's User Messaging Platform (UMP) to ask for your consent to personalized advertising where required by law (for example, under GDPR for users in the European Economic Area and UK). If you decline or an applicable law otherwise requires it, you may still see ads, but they will not be personalized based on your advertising identifier. You can change this choice at any time from **Main Menu → Settings → Reset Ad Consent**.
+The App uses Google's User Messaging Platform (UMP) to ask for your consent to personalized advertising where required by law (for example, under GDPR for users in the European Economic Area and UK). If you decline or an applicable law otherwise requires it, you may still see ads, but they will not be personalized based on your advertising identifier. You can change this choice at any time via your device's own OS-level advertising settings (see Section 8).
 
 ### 2.3 What is NOT collected
 
@@ -60,8 +60,7 @@ Flying Bird is a general-audience app and is not directed at children under 13. 
 
 ## 8. Your choices
 
-- You can reset your ad-personalization consent choice at any time via **Main Menu → Settings → Reset Ad Consent**.
-- You can request that Google limit ad tracking via your device's own OS-level advertising settings (e.g. Android Settings → Google → Ads → "Opt out of Ads Personalization").
+- You can request that Google limit ad tracking or opt out of ad personalization via your device's own OS-level advertising settings (e.g. Android Settings → Google → Ads → "Opt out of Ads Personalization").
 - Uninstalling the App removes all locally-stored save data (Section 2.1) from your device.
 
 ## 9. Third-party services this App uses
