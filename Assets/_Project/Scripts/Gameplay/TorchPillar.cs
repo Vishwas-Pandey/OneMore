@@ -55,6 +55,9 @@ public class TorchPillar : MonoBehaviour
         if (flameCap != null)
         {
             flameCap.localPosition = new Vector3(0f, dir * height, 0f);
+
+            var flameSr = flameCap.GetComponent<SpriteRenderer>();
+            if (flameSr != null) flameSr.flipY = isTop;
         }
 
         if (boxCollider != null)
