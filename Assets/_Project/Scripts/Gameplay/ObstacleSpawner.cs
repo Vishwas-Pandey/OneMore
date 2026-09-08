@@ -39,7 +39,13 @@ public class ObstacleSpawner : MonoBehaviour
     [SerializeField] private float speedIncreasePerStep = 0.33f;
 
     [Header("Spawn Timing")]
-    [SerializeField] private float spawnInterval = 2f;
+    // Interval is derived from current speed (spacing / speed), not fixed -
+    // a fixed interval would mean pipes get FARTHER apart in world space as
+    // speed ramps up (distance = speed * interval), which undercuts the
+    // difficulty curve instead of reinforcing it. Keeping the spatial spacing
+    // constant means faster pipes also arrive more often, not less.
+    [SerializeField] private float pipeSpacing = 4f;
+    [SerializeField] private float minSpawnInterval = 0.75f;
 
     [SerializeField] private ScoreManager scoreManager;
 
@@ -66,7 +72,8 @@ public class ObstacleSpawner : MonoBehaviour
         if (spawnTimer <= 0f)
         {
             SpawnPair();
-            spawnTimer = spawnInterval;
+            var (speed, _) = GetCurrentTuning();
+            spawnTimer = Mathf.Max(minSpawnInterval, pipeSpacing / speed);
         }
 
         CheckScoring();
