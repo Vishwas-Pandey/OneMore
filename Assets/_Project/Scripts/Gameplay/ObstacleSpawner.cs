@@ -1,54 +1,61 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
+/// <summary>
+/// Spawns torch-pillar pairs (top-hanging + bottom-standing) with a gap the
+/// bird must fly through - the flappy-bird pipe mechanic. Gap size and pipe
+/// speed both scale with score, matching the reference tuning: every 5
+/// points the gap shrinks and the speed increases, until the floor/ceiling
+/// values are hit. Scoring fires when a pair's X passes the player's X,
+/// exactly like the reference's boundingRect check (simplified to an X
+/// comparison since both pillars in a pair always share the same X/speed).
+/// </summary>
 public class ObstacleSpawner : MonoBehaviour
 {
-    [System.Serializable]
-    public class ObstaclePattern
+    private class ActivePair
     {
-        public string name;
-        public GameObject[] obstacles;
-        public float heightVariation;
-        public bool isMoving;
-        public float moveSpeed;
-        public int difficultyLevel;
+        public TorchPillar top;
+        public TorchPillar bottom;
+        public bool scored;
     }
 
-    [Header("Obstacle Settings")]
-    [SerializeField] private GameObject[] obstaclePrefabs;
-    [SerializeField] private Transform spawnPoint;
-    [SerializeField] private float minSpawnDistance = 1.5f;
-    [SerializeField] private float maxSpawnDistance = 3.5f;
-    [SerializeField] private int maxObstacles = 10;
+    [Header("Prefab & Spawn Point")]
+    [SerializeField] private GameObject pillarPrefab;
+    [SerializeField] private float spawnX = 6f;
+    [SerializeField] private Transform playerTransform;
 
-    [Header("Pattern Settings")]
-    [SerializeField] private ObstaclePattern[] patterns;
-    [SerializeField] private float patternChangeInterval = 5f;
+    [Header("Screen Bounds (world units)")]
+    [SerializeField] private float floorY = -4.6f;
+    [SerializeField] private float ceilingY = 4.6f;
 
-    [Header("Difficulty Settings")]
-    [SerializeField] private float baseDifficulty = 1f;
-    [SerializeField] private float difficultyMultiplier = 0.1f;
+    [Header("Gap Settings")]
+    [SerializeField] private float initialGap = 2.6f;
+    [SerializeField] private float minGap = 1.4f;
+    [SerializeField] private float gapShrinkPerStep = 0.15f;
 
-    private readonly List<GameObject> activeObstacles = new List<GameObject>();
-    private ObjectPool obstaclePool;
+    [Header("Speed Settings")]
+    [SerializeField] private float initialSpeed = 2f;
+    [SerializeField] private float maxSpeed = 5f;
+    [SerializeField] private float speedIncreasePerStep = 0.33f;
+
+    [Header("Spawn Timing")]
+    [SerializeField] private float spawnInterval = 2f;
+
+    [SerializeField] private ScoreManager scoreManager;
+
+    private ObjectPool pillarPool;
     private float spawnTimer;
-    private float patternTimer;
-    private int currentPatternIndex;
-    private readonly List<int> validPatternIndices = new List<int>();
-    private float currentDifficulty = 1f;
     private bool isSpawning;
+    private readonly List<ActivePair> activePairs = new List<ActivePair>();
 
     private void Awake()
     {
-        obstaclePool = GetComponent<ObjectPool>();
-        if (obstaclePool == null)
+        pillarPool = GetComponent<ObjectPool>();
+        if (pillarPool == null)
         {
-            obstaclePool = gameObject.AddComponent<ObjectPool>();
+            pillarPool = gameObject.AddComponent<ObjectPool>();
         }
-        obstaclePool.Initialize(obstaclePrefabs, 20);
-
-        UpdateValidPatterns();
+        pillarPool.Initialize(new[] { pillarPrefab }, 12);
     }
 
     private void Start()
@@ -60,138 +67,100 @@ public class ObstacleSpawner : MonoBehaviour
     {
         if (!isSpawning) return;
 
-        currentDifficulty = baseDifficulty + (GameManager.Instance != null ? GameManager.Instance.GetGameSpeed() : 1f) * difficultyMultiplier;
-
-        spawnTimer -= Time.deltaTime * currentDifficulty;
+        spawnTimer -= Time.deltaTime;
         if (spawnTimer <= 0f)
         {
-            SpawnObstacle();
-            spawnTimer = Random.Range(minSpawnDistance, maxSpawnDistance) / currentDifficulty;
+            SpawnPair();
+            spawnTimer = spawnInterval;
         }
 
-        patternTimer += Time.deltaTime;
-        if (patternTimer >= patternChangeInterval)
-        {
-            ChangePattern();
-            patternTimer = 0f;
-        }
-
-        activeObstacles.RemoveAll(item => item == null || !item.activeInHierarchy);
-
-        if (activeObstacles.Count > maxObstacles)
-        {
-            RemoveOldestObstacle();
-        }
+        CheckScoring();
+        activePairs.RemoveAll(p => p.bottom == null || !p.bottom.gameObject.activeInHierarchy);
     }
 
     private void StartSpawning()
     {
         isSpawning = true;
         spawnTimer = 1f;
-        currentPatternIndex = 0;
-        patternTimer = 0f;
-
-        for (int i = 0; i < 3; i++)
-        {
-            SpawnObstacle();
-        }
+        activePairs.Clear();
     }
 
     public void StopSpawning() => isSpawning = false;
 
-    private void SpawnObstacle()
+    private (float speed, float gap) GetCurrentTuning()
     {
-        GameObject prefab = GetObstacleFromCurrentPattern();
-        if (prefab == null) return;
+        int score = scoreManager != null ? scoreManager.GetCurrentScore() : 0;
+        int steps = score / 5;
+        float speed = Mathf.Min(maxSpeed, initialSpeed + steps * speedIncreasePerStep);
+        float gap = Mathf.Max(minGap, initialGap - steps * gapShrinkPerStep);
+        return (speed, gap);
+    }
 
-        GameObject obstacle = obstaclePool.GetObject(prefab);
-        if (obstacle == null) return;
+    private void SpawnPair()
+    {
+        var (speed, gap) = GetCurrentTuning();
 
-        Vector3 position = spawnPoint.position;
-        position.x += Random.Range(-0.5f, 0.5f);
-        position.y += Random.Range(-0.3f, 0.3f);
+        float totalHeight = ceilingY - floorY;
+        float minSegment = 0.6f;
+        float maxTopHeight = totalHeight - gap - minSegment;
+        if (maxTopHeight < minSegment) maxTopHeight = minSegment;
 
-        if (patterns.Length > 0 && currentPatternIndex < patterns.Length)
+        float topHeight = Random.Range(minSegment, maxTopHeight);
+        float bottomHeight = totalHeight - gap - topHeight;
+
+        var topGo = pillarPool.GetObject(pillarPrefab);
+        var bottomGo = pillarPool.GetObject(pillarPrefab);
+        if (topGo == null || bottomGo == null) return;
+
+        topGo.transform.position = new Vector3(spawnX, 0f, 0f);
+        bottomGo.transform.position = new Vector3(spawnX, 0f, 0f);
+        topGo.SetActive(true);
+        bottomGo.SetActive(true);
+
+        var topPillar = topGo.GetComponent<TorchPillar>();
+        var bottomPillar = bottomGo.GetComponent<TorchPillar>();
+        topPillar.SetOwnerPool(pillarPool);
+        bottomPillar.SetOwnerPool(pillarPool);
+        topPillar.SetSpeed(speed);
+        bottomPillar.SetSpeed(speed);
+        topPillar.Configure(topHeight, true, ceilingY);
+        bottomPillar.Configure(bottomHeight, false, floorY);
+
+        activePairs.Add(new ActivePair { top = topPillar, bottom = bottomPillar, scored = false });
+    }
+
+    private void CheckScoring()
+    {
+        if (playerTransform == null || scoreManager == null) return;
+        float playerX = playerTransform.position.x;
+
+        foreach (var pair in activePairs)
         {
-            ObstaclePattern pattern = patterns[currentPatternIndex];
-            position.y += Random.Range(-pattern.heightVariation, pattern.heightVariation);
-
-            Obstacle obstacleComponent = obstacle.GetComponent<Obstacle>();
-            if (obstacleComponent != null)
+            if (pair.scored || pair.bottom == null) continue;
+            if (pair.bottom.GetX() < playerX)
             {
-                obstacleComponent.SetDifficulty(currentDifficulty);
-                obstacleComponent.SetMovement(pattern.isMoving, pattern.moveSpeed);
-            }
-        }
-
-        obstacle.transform.position = position;
-        obstacle.SetActive(true);
-
-        activeObstacles.Add(obstacle);
-    }
-
-    private GameObject GetObstacleFromCurrentPattern()
-    {
-        if (patterns == null || patterns.Length == 0)
-        {
-            return obstaclePrefabs.Length > 0 ? obstaclePrefabs[Random.Range(0, obstaclePrefabs.Length)] : null;
-        }
-
-        ObstaclePattern pattern = patterns[currentPatternIndex];
-        if (pattern.obstacles == null || pattern.obstacles.Length == 0) return null;
-
-        return pattern.obstacles[Random.Range(0, pattern.obstacles.Length)];
-    }
-
-    private void ChangePattern()
-    {
-        UpdateValidPatterns();
-        if (validPatternIndices.Count == 0) return;
-
-        currentPatternIndex = validPatternIndices[Random.Range(0, validPatternIndices.Count)];
-    }
-
-    private void UpdateValidPatterns()
-    {
-        validPatternIndices.Clear();
-        if (patterns == null) return;
-
-        int currentDifficultyLevel = Mathf.FloorToInt(currentDifficulty);
-
-        for (int i = 0; i < patterns.Length; i++)
-        {
-            if (patterns[i].difficultyLevel <= currentDifficultyLevel)
-            {
-                validPatternIndices.Add(i);
+                pair.scored = true;
+                scoreManager.AddScore(1);
+                GameManager.Instance?.AddScore(1);
             }
         }
     }
 
-    private void RemoveOldestObstacle()
+    public void ClearAllPillars()
     {
-        if (activeObstacles.Count == 0) return;
-
-        GameObject oldest = activeObstacles[0];
-        activeObstacles.RemoveAt(0);
-
-        if (oldest != null)
+        // Pooled objects deactivate themselves on despawn; nothing still
+        // active needs to be force-cleared beyond forgetting our tracking list.
+        foreach (var pair in activePairs)
         {
-            obstaclePool.ReturnObject(oldest);
+            if (pair.top != null) pillarPool.ReturnObject(pair.top.gameObject);
+            if (pair.bottom != null) pillarPool.ReturnObject(pair.bottom.gameObject);
         }
-    }
-
-    public void ClearAllObstacles()
-    {
-        foreach (GameObject obstacle in activeObstacles)
-        {
-            if (obstacle != null) obstaclePool.ReturnObject(obstacle);
-        }
-        activeObstacles.Clear();
+        activePairs.Clear();
     }
 
     public void ResetSpawner()
     {
-        ClearAllObstacles();
+        ClearAllPillars();
         StopSpawning();
         StartSpawning();
     }

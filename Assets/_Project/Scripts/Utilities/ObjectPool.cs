@@ -38,8 +38,8 @@ public class ObjectPool : MonoBehaviour
         if (poolable == null) poolable = obj.AddComponent<Poolable>();
         poolable.SourcePrefab = prefab;
 
-        Obstacle obstacle = obj.GetComponent<Obstacle>();
-        if (obstacle != null) obstacle.SetOwnerPool(this);
+        TorchPillar pillar = obj.GetComponent<TorchPillar>();
+        if (pillar != null) pillar.SetOwnerPool(this);
 
         pool[prefab].Add(obj);
         return obj;
