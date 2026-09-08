@@ -33,10 +33,10 @@
             <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
         </activity>
 
-        <!-- AdMob app ID - test ID shown; replace with your real ID before release -->
+        <!-- Real AdMob app ID for com.onemorestudio.onemore -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-2894715849700422~8121251292"/>
 
         <activity
             android:name="com.google.android.gms.ads.AdActivity"
