@@ -1,4 +1,4 @@
-# Play Console Manual Steps — One More
+# Play Console Manual Steps — Flying Bird
 
 Everything below has to be entered directly into Google Play Console by you — none of it can be done from this project or by an automated tool, since it requires your Google Play Developer account, your decisions, and your legal sign-off.
 
@@ -6,7 +6,8 @@ Everything below has to be entered directly into Google Play Console by you — 
 
 | Field | Value to enter |
 |---|---|
-| App name | One More |
+| App name | Flying Bird |
+| Developer account | Virevia |
 | Default language | [YOUR CHOICE — likely English (United States) or English (United Kingdom)] |
 | App or game | Game |
 | Free or paid | Free (no in-app purchase/paywall exists in the current code — confirm this matches your intent before submitting) |
@@ -15,7 +16,7 @@ Everything below has to be entered directly into Google Play Console by you — 
 
 ## 2. Ads declaration
 
-**Declare: Yes, this app contains ads.** This is factually required — the app integrates Google Mobile Ads SDK and shows rewarded + interstitial ads (currently in test mode; see `DEPLOYMENT_STATUS.md` for what's needed before switching to production ad units).
+**Declare: Yes, this app contains ads.** The app integrates Google Mobile Ads SDK and shows banner, interstitial, and rewarded ads with real (production) AdMob ad unit IDs — not test IDs. As of this writing the AdMob account itself is still pending Google's approval, so live ads are serving Google's own placeholder "Test Ad" content in the meantime; this resolves automatically once the account is approved and requires no further app changes.
 
 ## 3. Content rating questionnaire
 
@@ -28,20 +29,20 @@ You will fill this out directly in Play Console (IARC questionnaire). Based on w
 
 ## 5. Data Safety section
 
-This is the part Play Console scrutinizes most closely, and where guessing is most harmful. Below is based strictly on what's actually in this codebase as of this session — not a template, not an assumption.
+This is the part Play Console scrutinizes most closely, and where guessing is most harmful. Below is based strictly on what's actually in this codebase.
 
 ### What the App itself collects and transmits
-**Nothing.** The app's own code (`SaveSystem.cs`) writes best score / games played / settings toggles to a local file on-device only (`Application.persistentDataPath`). This data is never sent off the device by the app's own code. The app requests no runtime permissions beyond what's needed for ads/haptics (see `DEPLOYMENT_STATUS.md` Section 10 — Vibrate, Wake Lock, Internet, Network State).
+**Nothing.** The app's own code (`SaveSystem.cs`) writes best score / games played / the sound on-off toggle to a local file on-device only (`Application.persistentDataPath`). This data is never sent off the device by the app's own code. The app requests no runtime permissions beyond what's needed for ads/haptics (Vibrate, Wake Lock, Internet, Network State, Ad ID).
 
 ### What third-party SDKs in this app may collect
-**Google Mobile Ads SDK (AdMob) + User Messaging Platform (UMP)** — the only third-party data-processing SDK actually integrated. Per Google's own published Data Safety disclosures for AdMob, declare (consult Play Console's own AdMob-specific guidance/wizard at declaration time, since Google updates this list — the following reflects what AdMob is documented to collect as of this writing):
+**Google Mobile Ads SDK (AdMob) + User Messaging Platform (UMP)** — the only third-party data-processing SDK actually integrated. Per Google's own published Data Safety disclosures for AdMob, declare (consult Play Console's own AdMob-specific guidance/wizard at declaration time, since Google updates this list):
 - **Device or other IDs** (advertising ID) — collected, used for Advertising, shared with Google.
 - **App interactions** (ad impressions/clicks) — collected, used for Advertising and Analytics.
 - **Approximate location** (derived from IP, not GPS — this app never requests location permission) — collected, used for Advertising.
-- Data collection is **not** required to use the core game (a user can decline ad personalization via the UMP consent flow, or play entirely offline, and the core loop still works — see `DEVICE_TEST_CHECKLIST.md` item 18).
+- Data collection is **not** required to use the core game (a user can decline ad personalization via the UMP consent flow, and the core loop still works).
 
 ### What is explicitly NOT present (do not over-declare these)
-- No Firebase Analytics or any other analytics SDK is actively transmitting data (see `DEPLOYMENT_STATUS.md` Section 7 — the internal `AnalyticsManager` queue is local-only and currently just logs to console; `enableFirebase` defaults false and the Firebase calls are commented out).
+- No Firebase Analytics or any other analytics SDK is actively transmitting data (the internal `AnalyticsManager` queue is local-only and currently just logs to console; `enableFirebase` defaults false and the Firebase calls are commented out).
 - No crash reporting SDK is integrated.
 - No account creation, no login, no user-generated content, no in-app purchases, no contacts/location/camera/microphone access.
 
@@ -49,7 +50,7 @@ This is the part Play Console scrutinizes most closely, and where guessing is mo
 
 ## 6. Privacy Policy URL
 
-**Blocked until you complete this.** `PRIVACY_POLICY.md` in this repo is a complete draft, but Play Console requires a **live public HTTPS URL**, not a file in your repo. Publish the filled-in policy somewhere with a stable URL, then paste that URL into **App content → Privacy policy**.
+**Done.** Live at: **https://vishwas-pandey.github.io/OneMore/privacy-policy.html** — enter this exact URL into **App content → Privacy policy**. (Source markdown also kept at `PRIVACY_POLICY.md` in this repo; the hosted HTML page at `docs/privacy-policy.html` is the one that's actually live and should be kept in sync if the policy text changes.)
 
 ## 7. App access
 
@@ -59,13 +60,13 @@ Since the app has no login/account system, declare **"All functionality is avail
 
 Your choice — no code in this project restricts geography. If you enable ads in the EEA/UK, the UMP consent flow (already implemented) is what makes that legally viable; nothing further to configure in-app for regional availability itself.
 
-## 9. Closed testing (strongly recommended before Production)
+## 9. Closed testing (required for new developer accounts)
 
-Play Console lets you create a **Closed testing** track first. Recommended before going to Production:
+Google requires new/personal Play Console developer accounts to run a **Closed testing** track with at least 12 opted-in testers for 14 continuous days before Production is unlocked. Sequence:
 1. Upload `Builds/Android/OneMore_Release.aab` to a Closed testing track.
-2. Add yourself (and anyone else) as a tester by email.
-3. Actually run through `DEVICE_TEST_CHECKLIST.md` on the installed build from that track.
-4. Only promote to Production once that checklist passes.
+2. Add at least 12 testers by email; they must actually opt in and install.
+3. Let the 14-day window run — this is a Play policy timer, not something any tooling can skip.
+4. Only promote to Production once that window passes and testing looks clean.
 
 ## 10. Production release
 
@@ -76,7 +77,7 @@ Once Closed testing passes:
 
 ### Suggested first release notes
 ```
-First release of One More — a minimalist one-tap arcade game. Tap to jump, survive as long as you can, and try to beat your own best score.
+First release of Flying Bird — a classic tap-to-fly arcade game. Guide your bird between the pillars, survive as long as you can, and try to beat your own best score.
 ```
 
 ## 11. Store listing content
@@ -84,9 +85,9 @@ Already drafted in `PLAY_STORE_LISTING.md` (short/full description, feature bull
 
 ---
 
-## Summary — what's genuinely blocking Production submission right now
+## Summary — what's genuinely left before Production submission
 
-1. **Privacy policy public URL** (Section 6) — hard blocker, Play Console will not let you submit without it.
-2. **Store screenshots + feature graphic + 512×512 store icon** (see `STORE_ASSETS_CHECKLIST.md`) — need a running build to capture from.
-3. **Production AdMob ad unit IDs**, if you want real ad revenue rather than shipping in permanent test-ad mode (see `DEPLOYMENT_STATUS.md` Section 4) — not a submission blocker per se (Play doesn't reject test ads), but you should not launch publicly serving Google's test ads indefinitely.
+1. **Store screenshots + feature graphic + 512×512 store icon** (see `STORE_ASSETS_CHECKLIST.md`) — need to be captured from a running build.
+2. **AdMob account approval** — pending on Google's side; ads are wired with real IDs already and will start serving real inventory automatically once approved.
+3. **The 12-tester / 14-day Closed testing window** (Section 9) — a Play policy requirement for new developer accounts, not something this project can shortcut.
 4. Everything else in this document is data-entry you can complete directly in Play Console once you're ready.
