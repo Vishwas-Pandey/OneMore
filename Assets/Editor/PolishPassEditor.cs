@@ -130,6 +130,22 @@ public static class PolishPassEditor
         var gameOverPanelGo = FindDeep(scene, "GameOverPanel");
         if (gameOverPanelGo != null)
         {
+            var img = gameOverPanelGo.GetComponent<Image>();
+            if (img != null)
+            {
+                // Same bug as MainMenuPanel: this is a full-screen (0,0)-(1,1)
+                // stretched Image whose panel_bg sprite reference broke
+                // silently in an earlier texture-mode switch (confirmed
+                // on-device: renders as a washed-out white/gray instead of
+                // the card art). Made transparent instead of re-fixing the
+                // sprite so the actual dark gameplay background (already
+                // visible behind this Canvas layer) shows through directly -
+                // consistent with the Main Menu treatment.
+                var c = img.color;
+                c.a = 0f;
+                img.color = c;
+                Debug.Log("[Polish2] GameOverPanel background made transparent (was rendering as a washed-out full-screen stretch).");
+            }
             AddTorchPair(gameOverPanelGo.transform, 380f, "GameOverTorch");
         }
 
