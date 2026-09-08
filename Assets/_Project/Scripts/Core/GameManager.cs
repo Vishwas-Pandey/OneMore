@@ -9,16 +9,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Settings")]
     [SerializeField] private GameState currentState;
-    [SerializeField] private int score;
-    [SerializeField] private int bestScore;
-    [SerializeField] private float gameSpeed = 1f;
-    [SerializeField] private float maxGameSpeed = 2.5f;
-    [SerializeField] private float speedRampPerPoint = 0.02f;
     [SerializeField] private bool isNewBest;
 
-    public event Action<int> OnScoreUpdated;
     public event Action<GameState> OnGameStateChanged;
-    public event Action<int> OnBestScoreUpdated;
     public event Action OnGameOver;
     public event Action OnGameRestart;
 
@@ -32,15 +25,16 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
         }
-
-        Initialize();
     }
 
-    private void Initialize()
+    private void Start()
     {
-        bestScore = SaveSystem.LoadBestScore();
+        // Deferred to Start() (rather than Awake()) so every other
+        // singleton's own Awake() has already run first - Unity guarantees
+        // all Awake calls finish before any Start call, which plain Awake
+        // ordering does not. AnalyticsManager/ConsentManager/AdManager are
+        // only guaranteed non-null here.
         InitializeSystems();
     }
 
@@ -71,8 +65,6 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        score = 0;
-        gameSpeed = 1f;
         isNewBest = false;
         Time.timeScale = 1f;
         SetGameState(GameState.Countdown);
@@ -105,20 +97,27 @@ public class GameManager : MonoBehaviour
         SetGameState(GameState.Playing);
     }
 
-    public void GameOver()
+    /// <summary>
+    /// finalScore/isNewBest are supplied by the caller (from ScoreManager,
+    /// the single source of truth for score - it already applies the combo
+    /// multiplier and already saved any new best to disk in real time).
+    /// GameManager used to track its own separate score/bestScore in
+    /// parallel and re-save here, which could overwrite a correct save with
+    /// a stale, lower value since its own cache was never refreshed after
+    /// the initial load - removed rather than kept in sync, since nothing
+    /// but this method needed it.
+    /// </summary>
+    public void GameOver(int finalScore, bool isNewBest)
     {
         SetGameState(GameState.GameOver);
+        this.isNewBest = isNewBest;
 
-        if (score > bestScore)
+        if (isNewBest)
         {
-            bestScore = score;
-            SaveSystem.SaveBestScore(bestScore);
-            isNewBest = true;
-            OnBestScoreUpdated?.Invoke(bestScore);
-            AnalyticsManager.TrackNewHighScore(score);
+            AnalyticsManager.TrackNewHighScore(finalScore);
         }
 
-        AnalyticsManager.TrackGameOver(score, bestScore, isNewBest);
+        AnalyticsManager.TrackGameOver(finalScore, SaveSystem.LoadBestScore(), isNewBest);
         OnGameOver?.Invoke();
     }
 
@@ -128,18 +127,6 @@ public class GameManager : MonoBehaviour
         StartGame();
     }
 
-    public void AddScore(int points = 1)
-    {
-        score += points;
-        gameSpeed = Mathf.Min(maxGameSpeed, 1f + score * speedRampPerPoint);
-        OnScoreUpdated?.Invoke(score);
-
-        if (score % 10 == 0)
-        {
-            AnalyticsManager.TrackMilestone(score);
-        }
-    }
-
     private void SetGameState(GameState newState)
     {
         currentState = newState;
@@ -147,8 +134,21 @@ public class GameManager : MonoBehaviour
     }
 
     public GameState GetGameState() => currentState;
-    public float GetGameSpeed() => gameSpeed;
-    public int GetScore() => score;
-    public int GetBestScore() => bestScore;
     public bool IsNewBest() => isNewBest;
+
+    /// <summary>
+    /// Fires when the app loses/regains foreground (notification shade,
+    /// quick settings, a system dialog, app switch) - without this, gravity
+    /// and obstacle movement kept running while the player couldn't see or
+    /// touch the screen, producing an unfair death the instant focus
+    /// returned. Only auto-pauses; resuming is still the player's own
+    /// explicit action via the pause button.
+    /// </summary>
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus && currentState == GameState.Playing)
+        {
+            TogglePause();
+        }
+    }
 }
