@@ -74,9 +74,31 @@ public class GameManager : MonoBehaviour
         score = 0;
         gameSpeed = 1f;
         isNewBest = false;
+        Time.timeScale = 1f;
         SetGameState(GameState.Countdown);
         AnalyticsManager.TrackGameStarted();
     }
+
+    /// <summary>
+    /// Time.timeScale = 0 freezes every Time.deltaTime-driven system at once
+    /// (bird physics, pipe movement/spawning) without needing each script to
+    /// separately check a "paused" flag - simplest correct way to pause here.
+    /// </summary>
+    public void TogglePause()
+    {
+        if (currentState == GameState.Playing)
+        {
+            Time.timeScale = 0f;
+            SetGameState(GameState.Paused);
+        }
+        else if (currentState == GameState.Paused)
+        {
+            Time.timeScale = 1f;
+            SetGameState(GameState.Playing);
+        }
+    }
+
+    public bool IsPaused() => currentState == GameState.Paused;
 
     public void BeginPlaying()
     {

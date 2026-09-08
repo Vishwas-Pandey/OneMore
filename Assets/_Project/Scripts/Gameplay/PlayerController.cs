@@ -56,6 +56,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         if (!IsAlive || !canFly) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused()) return;
 
         bool tapped = Input.GetMouseButtonDown(0);
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)

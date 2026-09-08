@@ -35,11 +35,16 @@ public class GameplayUIController : MonoBehaviour
     [Header("HUD")]
     [SerializeField] private GameObject hud;
 
+    [Header("Pause")]
+    [SerializeField] private Button pauseButton;
+    [SerializeField] private TextMeshProUGUI pauseButtonText;
+
     private void Awake()
     {
         if (restartButton != null) restartButton.onClick.AddListener(OnRestartClicked);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinueClicked);
         if (menuButton != null) menuButton.onClick.AddListener(OnMenuClicked);
+        if (pauseButton != null) pauseButton.onClick.AddListener(OnPauseClicked);
 
         if (GameManager.Instance != null)
         {
@@ -117,7 +122,17 @@ public class GameplayUIController : MonoBehaviour
 
     public void OnMenuClicked()
     {
+        Time.timeScale = 1f; // defensive: don't leave the whole app frozen if this is reached while paused
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public void OnPauseClicked()
+    {
+        GameManager.Instance?.TogglePause();
+
+        bool paused = GameManager.Instance != null && GameManager.Instance.IsPaused();
+        if (pauseButtonText != null) pauseButtonText.text = paused ? "PLAY" : "PAUSE";
+        AudioManager.Instance?.PlayButtonSound();
     }
 
     private void OnDestroy()
