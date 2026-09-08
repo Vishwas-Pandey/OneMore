@@ -8,18 +8,15 @@ public class MainMenuController : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private GameObject mainMenuPanel;
-    [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private GameObject privacyPanel;
 
     [Header("Buttons")]
     [SerializeField] private Button playButton;
-    [SerializeField] private Button settingsButton;
-    [SerializeField] private Button privacyButton;
     [SerializeField] private Button soundToggleButton;
-    [SerializeField] private Button musicToggleButton;
-    [SerializeField] private Button hapticsToggleButton;
+    [SerializeField] private Button privacyButton;
     [SerializeField] private Button exitButton;
-    [SerializeField] private Button resetAdConsentButton;
+
+    [Header("Privacy")]
+    [SerializeField] private string privacyPolicyUrl = "https://vishwas-pandey.github.io/OneMore/privacy-policy.html";
 
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI bestScoreText;
@@ -74,15 +71,13 @@ public class MainMenuController : MonoBehaviour
     private void InitializeUI()
     {
         mainMenuPanel.SetActive(true);
-        settingsPanel.SetActive(false);
-        privacyPanel.SetActive(false);
 
         if (titleText != null)
         {
             titleOriginalPosition = titleText.rectTransform.localPosition;
         }
 
-        UpdateToggleStates();
+        UpdateSoundButtonLabel();
     }
 
     private void LoadGameData()
@@ -104,33 +99,9 @@ public class MainMenuController : MonoBehaviour
     private void SetupListeners()
     {
         if (playButton != null) playButton.onClick.AddListener(OnPlayClicked);
-        if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClicked);
-        if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
         if (soundToggleButton != null) soundToggleButton.onClick.AddListener(ToggleSound);
-        if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
-        if (hapticsToggleButton != null) hapticsToggleButton.onClick.AddListener(ToggleHaptics);
+        if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
         if (exitButton != null) exitButton.onClick.AddListener(OnExitClicked);
-        if (resetAdConsentButton != null) resetAdConsentButton.onClick.AddListener(OnResetAdConsentClicked);
-    }
-
-    /// <summary>
-    /// Referenced by the privacy policy (Section 8, "Your choices") as the
-    /// place users can withdraw/change their ad-personalization consent.
-    /// Resets UMP's stored consent state, then immediately re-runs the
-    /// gathering flow so the platform-appropriate form (if any) shows again
-    /// right away rather than requiring an app restart.
-    /// </summary>
-    public void OnResetAdConsentClicked()
-    {
-        PlayClickSound();
-        ConsentManager.Instance?.ResetConsentState();
-        ConsentManager.Instance?.GatherConsent(() =>
-        {
-            if (ConsentManager.Instance != null && ConsentManager.Instance.CanRequestAds())
-            {
-                AdManager.Instance?.Initialize();
-            }
-        });
     }
 
     public void OnExitClicked()
@@ -174,62 +145,33 @@ public class MainMenuController : MonoBehaviour
         SceneManager.LoadScene("Gameplay");
     }
 
-    public void OnSettingsClicked()
-    {
-        PlayClickSound();
-        settingsPanel.SetActive(!settingsPanel.activeSelf);
-        UpdateToggleStates();
-    }
-
+    /// <summary>
+    /// Opens the hosted privacy policy in the device's own browser rather
+    /// than an in-app panel - simpler than maintaining a second copy of the
+    /// policy text in-game, and it's always the current, live version.
+    /// </summary>
     public void OnPrivacyClicked()
     {
         PlayClickSound();
-        privacyPanel.SetActive(!privacyPanel.activeSelf);
+        Application.OpenURL(privacyPolicyUrl);
     }
 
     public void ToggleSound()
     {
         AudioManager.Instance?.ToggleSound();
-        UpdateToggleStates();
+        UpdateSoundButtonLabel();
         PlayClickSound();
     }
 
-    public void ToggleMusic()
+    private void UpdateSoundButtonLabel()
     {
-        AudioManager.Instance?.ToggleMusic();
-        UpdateToggleStates();
-        PlayClickSound();
-    }
+        if (soundToggleButton == null || AudioManager.Instance == null) return;
 
-    public void ToggleHaptics()
-    {
-        HapticManager.Instance?.ToggleHaptics();
-        UpdateToggleStates();
-        PlayClickSound();
-    }
-
-    private void UpdateToggleStates()
-    {
-        if (soundToggleButton != null && AudioManager.Instance != null)
-            UpdateToggleButton(soundToggleButton, AudioManager.Instance.IsSoundEnabled());
-
-        if (musicToggleButton != null && AudioManager.Instance != null)
-            UpdateToggleButton(musicToggleButton, AudioManager.Instance.IsMusicEnabled());
-
-        if (hapticsToggleButton != null && HapticManager.Instance != null)
-            UpdateToggleButton(hapticsToggleButton, HapticManager.Instance.IsEnabled());
-    }
-
-    private void UpdateToggleButton(Button button, bool isActive)
-    {
-        Image image = button.GetComponent<Image>();
-        if (image != null) image.color = isActive ? Color.white : Color.gray;
-
-        TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
+        bool isOn = AudioManager.Instance.IsSoundEnabled();
+        TextMeshProUGUI label = soundToggleButton.GetComponentInChildren<TextMeshProUGUI>();
         if (label != null)
         {
-            label.text = isActive ? "ON" : "OFF";
-            label.color = isActive ? Color.white : Color.gray;
+            label.text = isOn ? "SOUND: ON" : "SOUND: OFF";
         }
     }
 
@@ -268,18 +210,7 @@ public class MainMenuController : MonoBehaviour
         // hardware key, so this branch is naturally inert there.
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (settingsPanel.activeSelf)
-            {
-                settingsPanel.SetActive(false);
-            }
-            else if (privacyPanel.activeSelf)
-            {
-                privacyPanel.SetActive(false);
-            }
-            else
-            {
-                QuitApplication();
-            }
+            QuitApplication();
         }
     }
 }
