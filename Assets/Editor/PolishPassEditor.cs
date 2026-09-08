@@ -66,22 +66,33 @@ public static class PolishPassEditor
         foreach (float x in new[] { -430f, 430f })
         {
             string name = $"{namePrefix}_{(x < 0 ? "Left" : "Right")}";
-            if (FindRecursive(parent, name) != null) continue;
+            var existing = FindRecursive(parent, name);
+            GameObject go;
+            if (existing != null)
+            {
+                go = existing.gameObject;
+            }
+            else
+            {
+                go = new GameObject(name, typeof(RectTransform));
+                go.transform.SetParent(parent, false);
+                var rt0 = go.GetComponent<RectTransform>();
+                rt0.anchorMin = rt0.anchorMax = new Vector2(0.5f, 0.5f);
+                rt0.pivot = new Vector2(0.5f, 0f);
+                rt0.anchoredPosition = new Vector2(x, y);
+                rt0.sizeDelta = new Vector2(150, 460);
 
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            go.transform.SetAsFirstSibling();
-            var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0f);
-            rt.anchoredPosition = new Vector2(x, y);
-            rt.sizeDelta = new Vector2(150, 460);
+                var img0 = go.AddComponent<Image>();
+                img0.sprite = torchSprite;
+                img0.type = Image.Type.Simple;
+                img0.preserveAspect = true;
+                img0.color = Color.white;
+            }
 
-            var img = go.AddComponent<Image>();
-            img.sprite = torchSprite;
-            img.type = Image.Type.Simple;
-            img.preserveAspect = true;
-            img.color = Color.white;
+            // Always re-apply sibling order (last = frontmost) - a first-
+            // sibling background added in a later pass would otherwise end
+            // up rendering in front of an already-created torch.
+            go.transform.SetAsLastSibling();
         }
     }
 
