@@ -8,7 +8,7 @@ This Privacy Policy describes how the "Flying Bird" mobile game ("the App", "we"
 
 This policy applies to the "Flying Bird" app, developed by **Virevia**, available on Google Play.
 
-Contact: **sharwanvij211@gmail.com**
+Contact: **problem.virevia@gmail.com**
 
 ## 2. What information is collected
 
@@ -51,7 +51,7 @@ The App is a native mobile game, not a website, and does not use cookies. Third-
 
 ## 6. Children's privacy
 
-Flying Bird is a general-audience app and is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with information, contact us at **sharwanvij211@gmail.com** and we will address it.
+Flying Bird is a general-audience app and is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with information, contact us at **problem.virevia@gmail.com** and we will address it.
 
 ## 7. Data retention
 
@@ -76,4 +76,4 @@ We may update this policy as the App changes (for example, if we add an analytic
 
 ## 11. Contact
 
-Questions about this policy or your data: **sharwanvij211@gmail.com**
+Questions about this policy or your data: **problem.virevia@gmail.com**
