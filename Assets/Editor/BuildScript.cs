@@ -22,19 +22,19 @@ public static class BuildScript
     [MenuItem("Build/Android/Development")]
     public static void BuildAndroidDevelopment()
     {
-        BuildAndroid("Development", BuildOptions.Development | BuildOptions.ConnectWithProfiler, false);
+        BuildAndroid("Development", BuildOptions.Development | BuildOptions.ConnectWithProfiler, false, useReleaseSigning: false);
     }
 
     [MenuItem("Build/Android/Release APK")]
     public static void BuildAndroidRelease()
     {
-        BuildAndroid("Release", BuildOptions.None, false);
+        BuildAndroid("Release", BuildOptions.None, false, useReleaseSigning: true);
     }
 
     [MenuItem("Build/Android/Release App Bundle (Play Store)")]
     public static void BuildAndroidAppBundle()
     {
-        BuildAndroid("Release", BuildOptions.None, true);
+        BuildAndroid("Release", BuildOptions.None, true, useReleaseSigning: true);
     }
 
     /// <summary>
@@ -74,9 +74,22 @@ public static class BuildScript
         }
     }
 
-    private static void BuildAndroid(string variant, BuildOptions options, bool buildAppBundle)
+    private static void BuildAndroid(string variant, BuildOptions options, bool buildAppBundle, bool useReleaseSigning)
     {
-        ApplySigningCredentialsIfAvailable();
+        // useCustomKeystore is a project-wide PlayerSettings flag, not a
+        // per-build-variant one - without this, a quick Development build
+        // would also demand the release keystore passwords and fail outright
+        // whenever they're not sitting in the environment. Dev builds should
+        // just use Unity's own auto-generated debug keystore instead.
+        bool originalUseCustomKeystore = PlayerSettings.Android.useCustomKeystore;
+        if (useReleaseSigning)
+        {
+            ApplySigningCredentialsIfAvailable();
+        }
+        else
+        {
+            PlayerSettings.Android.useCustomKeystore = false;
+        }
 
         string outputDir = "Builds/Android";
         Directory.CreateDirectory(outputDir);
@@ -98,6 +111,12 @@ public static class BuildScript
         };
 
         var report = BuildPipeline.BuildPlayer(buildOptions);
+
+        if (!useReleaseSigning)
+        {
+            PlayerSettings.Android.useCustomKeystore = originalUseCustomKeystore;
+        }
+
         if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
             Debug.Log($"[BuildScript] Android build succeeded: {outputPath}");
