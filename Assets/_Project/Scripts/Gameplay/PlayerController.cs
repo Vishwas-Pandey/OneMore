@@ -10,13 +10,14 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Flap Physics")]
-    [SerializeField] private float flapVelocity = 5.5f;
-    [SerializeField] private float gravityScale = 2.6f;
-    [SerializeField] private float maxFallSpeed = -9f;
-    [SerializeField] private float maxRiseSpeed = 6.5f;
+    [SerializeField] private float flapVelocity = 5f;
+    [SerializeField] private float gravityScale = 1.3f;
+    [SerializeField] private float maxFallSpeed = -5.5f;
+    [SerializeField] private float maxRiseSpeed = 6f;
     [SerializeField] private float tiltPerVelocity = 6f;
-    [SerializeField] private float maxTiltUp = 25f;
-    [SerializeField] private float maxTiltDown = -70f;
+    [SerializeField] private float maxTiltUp = 20f;
+    [SerializeField] private float maxTiltDown = -55f;
+    [SerializeField] private float tiltSmoothSpeed = 7f;
 
     [Header("Visual Settings")]
     [SerializeField] private ParticleSystem jumpParticles;
@@ -98,8 +99,13 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateTilt()
     {
+        // Slerp toward the target angle instead of snapping to it instantly -
+        // an instant snap is what reads as a rigid "ball bounce"; easing
+        // toward the target each frame gives the smoother, flowing rotation
+        // of an actual gliding bird.
         float targetAngle = Mathf.Clamp(rb.linearVelocity.y * tiltPerVelocity, maxTiltDown, maxTiltUp);
-        transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+        Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tiltSmoothSpeed * Time.deltaTime);
     }
 
     private void UpdateAnimations()
