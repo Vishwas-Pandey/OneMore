@@ -209,6 +209,11 @@ public static class FlappyRebuildEditor
         {
             var cam = camGo.GetComponent<Camera>();
             cam.backgroundColor = new Color(0.05f, 0.05f, 0.06f, 1f);
+            if (camGo.GetComponent<AudioListener>() == null)
+            {
+                camGo.AddComponent<AudioListener>();
+                Debug.Log($"[FlappyRebuild] Added missing AudioListener to Main Camera in {scene.name}");
+            }
         }
 
         // Neon-retro UI recolor.
@@ -261,6 +266,11 @@ public static class FlappyRebuildEditor
         {
             var cam = camGo.GetComponent<Camera>();
             cam.backgroundColor = new Color(0.05f, 0.05f, 0.06f, 1f);
+            if (camGo.GetComponent<AudioListener>() == null)
+            {
+                camGo.AddComponent<AudioListener>();
+                Debug.Log($"[FlappyRebuild] Added missing AudioListener to Main Camera in {scene.name}");
+            }
         }
 
         WireAudio(scene);

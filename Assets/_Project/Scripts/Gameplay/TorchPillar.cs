@@ -18,9 +18,23 @@ public class TorchPillar : MonoBehaviour
     private float speed;
     private ObjectPool ownerPool;
     private bool isTopPillar;
+    private float shaftNativeHeight = 1f;
 
     public void SetOwnerPool(ObjectPool pool) => ownerPool = pool;
     public void SetSpeed(float value) => speed = value;
+
+    private void Awake()
+    {
+        // localScale is a multiplier on the sprite's own native size, not a
+        // direct world-unit length - cache the native height once so Configure
+        // can scale to an exact world-unit target instead of silently
+        // under/over-shooting by whatever the source sprite's PPU happens to be.
+        var sr = shaft.GetComponent<SpriteRenderer>();
+        if (sr != null && sr.sprite != null)
+        {
+            shaftNativeHeight = sr.sprite.bounds.size.y;
+        }
+    }
 
     /// <summary>
     /// height: world-unit length of the shaft. isTop: true if this pillar
@@ -34,7 +48,8 @@ public class TorchPillar : MonoBehaviour
         isTopPillar = isTop;
         float dir = isTop ? -1f : 1f;
 
-        shaft.localScale = new Vector3(shaft.localScale.x, height, shaft.localScale.z);
+        float scaleY = shaftNativeHeight > 0f ? height / shaftNativeHeight : height;
+        shaft.localScale = new Vector3(shaft.localScale.x, scaleY, shaft.localScale.z);
         shaft.localPosition = new Vector3(0f, dir * height * 0.5f, 0f);
 
         if (flameCap != null)

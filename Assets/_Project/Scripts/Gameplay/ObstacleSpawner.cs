@@ -58,11 +58,6 @@ public class ObstacleSpawner : MonoBehaviour
         pillarPool.Initialize(new[] { pillarPrefab }, 12);
     }
 
-    private void Start()
-    {
-        StartSpawning();
-    }
-
     private void Update()
     {
         if (!isSpawning) return;
@@ -78,7 +73,7 @@ public class ObstacleSpawner : MonoBehaviour
         activePairs.RemoveAll(p => p.bottom == null || !p.bottom.gameObject.activeInHierarchy);
     }
 
-    private void StartSpawning()
+    public void StartSpawning()
     {
         isSpawning = true;
         spawnTimer = 1f;

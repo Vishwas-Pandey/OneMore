@@ -29,7 +29,15 @@ public class PlayerController : MonoBehaviour
     public event System.Action OnDeath;
 
     public bool IsAlive { get; private set; } = true;
-    public Vector2 Velocity => rb.velocity;
+    public Vector2 Velocity => rb.linearVelocity;
+
+    /// <summary>
+    /// True only once BeginFlight() has been called (i.e. the countdown has
+    /// finished). Gravity/input/death are all gated on this so the bird just
+    /// hovers in place during the pre-game countdown instead of immediately
+    /// falling into the ground/ceiling before the player can react.
+    /// </summary>
+    private bool canFly;
 
     private void Awake()
     {
@@ -38,7 +46,7 @@ public class PlayerController : MonoBehaviour
         {
             rb = gameObject.AddComponent<Rigidbody2D>();
         }
-        rb.gravityScale = gravityScale;
+        rb.gravityScale = 0f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -46,7 +54,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (!IsAlive) return;
+        if (!IsAlive || !canFly) return;
 
         bool tapped = Input.GetMouseButtonDown(0);
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
@@ -63,16 +71,23 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsAlive) return;
+        if (!IsAlive || !canFly) return;
 
-        var v = rb.velocity;
+        var v = rb.linearVelocity;
         v.y = Mathf.Clamp(v.y, maxFallSpeed, maxRiseSpeed);
-        rb.velocity = v;
+        rb.linearVelocity = v;
+    }
+
+    /// <summary>Called once the countdown finishes and gameplay actually begins.</summary>
+    public void BeginFlight()
+    {
+        canFly = true;
+        rb.gravityScale = gravityScale;
     }
 
     private void Flap()
     {
-        rb.velocity = new Vector2(0f, flapVelocity);
+        rb.linearVelocity = new Vector2(0f, flapVelocity);
 
         if (jumpParticles != null) jumpParticles.Play();
         AudioManager.Instance?.PlayJumpSound();
@@ -83,7 +98,7 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateTilt()
     {
-        float targetAngle = Mathf.Clamp(rb.velocity.y * tiltPerVelocity, maxTiltDown, maxTiltUp);
+        float targetAngle = Mathf.Clamp(rb.linearVelocity.y * tiltPerVelocity, maxTiltDown, maxTiltUp);
         transform.rotation = Quaternion.Euler(0, 0, targetAngle);
     }
 
@@ -91,13 +106,13 @@ public class PlayerController : MonoBehaviour
     {
         if (animator == null) return;
 
-        animator.SetFloat("verticalSpeed", rb.velocity.y);
+        animator.SetFloat("verticalSpeed", rb.linearVelocity.y);
         animator.SetBool("isAlive", IsAlive);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!IsAlive) return;
+        if (!IsAlive || !canFly) return;
 
         if (other.CompareTag("Obstacle") || other.CompareTag("Ground") || other.CompareTag("Ceiling"))
         {
@@ -129,7 +144,9 @@ public class PlayerController : MonoBehaviour
         transform.position = position;
         transform.rotation = Quaternion.identity;
         IsAlive = true;
-        rb.velocity = Vector2.zero;
+        canFly = false;
+        rb.gravityScale = 0f;
+        rb.linearVelocity = Vector2.zero;
 
         if (animator != null) animator.SetBool("isAlive", true);
     }

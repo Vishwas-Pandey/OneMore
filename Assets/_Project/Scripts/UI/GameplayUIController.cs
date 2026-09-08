@@ -17,7 +17,7 @@ public class GameplayUIController : MonoBehaviour
     [SerializeField] private PlayerController player;
     [SerializeField] private ObstacleSpawner obstacleSpawner;
     [SerializeField] private ScoreManager scoreManager;
-    [SerializeField] private Vector3 playerStartPosition = new Vector3(-3f, 0f, 0f);
+    [SerializeField] private Vector3 playerStartPosition = new Vector3(-1.8f, 0f, 0f);
 
     [Header("Countdown")]
     [SerializeField] private GameObject countdownOverlay;
@@ -71,6 +71,8 @@ public class GameplayUIController : MonoBehaviour
 
         hud.SetActive(true);
         GameManager.Instance?.BeginPlaying();
+        player.BeginFlight();
+        obstacleSpawner.StartSpawning();
     }
 
     private void HandleGameOver()
@@ -108,6 +110,7 @@ public class GameplayUIController : MonoBehaviour
             gameOverPanel.SetActive(false);
             hud.SetActive(true);
             player.ResetPlayer(playerStartPosition);
+            player.BeginFlight();
             obstacleSpawner.ResetSpawner();
         });
     }

@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4334783836991956000, guid: 4c35402521b5b4773bf11c431abc32c2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4c35402521b5b4773bf11c431abc32c2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -170,20 +170,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e683a091a7e0f4db59423b5377e2d1b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  jumpForce: 8
+  flapVelocity: 5.5
   gravityScale: 2
-  maxSpeed: 5
-  groundCheck: {fileID: 2071992270864807661}
-  groundCheckRadius: 0.3
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
+  maxFallSpeed: -9
+  maxRiseSpeed: 6.5
+  tiltPerVelocity: 6
+  maxTiltUp: 25
+  maxTiltDown: -70
   jumpParticles: {fileID: 0}
-  trailParticles: {fileID: 0}
   deathParticles: {fileID: 0}
   animator: {fileID: 0}
-  jumpCooldown: 0.15
-  coyoteTime: 0.1
 --- !u!1 &9181692209606008854
 GameObject:
   m_ObjectHideFlags: 0
