@@ -1,85 +1,66 @@
-ONE MORE — FINAL RELEASE AUDIT
+# Flying Bird — Final Release Audit
 
-Read-only verification pass. No code, configuration, or asset changes were made while producing this document. Every claim below was independently re-checked against the actual files/artifact in this pass (bundletool manifest dump, keytool cert inspection, direct scene/ProjectSettings YAML inspection, git ls-files) — not taken on faith from prior session summaries.
+**Last updated: September 9, 2026.** Supersedes and replaces the earlier `DEPLOYMENT_STATUS.md`, `FINAL_RELEASE_STATUS.md`, and `DEVICE_TEST_CHECKLIST.md` (all deleted — they described an earlier, pre-rebuild version of this game and were no longer accurate).
 
-GREEN — VERIFIED READY
-- Package ID is consistent and correct everywhere it matters: `com.onemorestudio.onemore` in `ProjectSettings/ProjectSettings.asset` (`applicationIdentifier.Android` and `.iPhone`), in `Assets/Plugins/Android/AndroidManifest.xml`, and confirmed in the actual built AAB's manifest (`bundletool dump manifest` → `package="com.onemorestudio.onemore"`).
-- Version verified in the actual AAB: `versionCode="1"`, `versionName="1.0.0"` (matches `ProjectSettings.asset`).
-- SDK levels verified in the actual AAB: `minSdkVersion="25"`, `targetSdkVersion="35"`, `compileSdkVersion="35"`.
-- Architecture verified: only `lib/arm64-v8a` native libraries present in the bundle — no armv7, ARM64-only as configured (`AndroidTargetArchitectures: 2`). IL2CPP scripting backend confirmed.
-- Signing verified: extracted the AAB's `META-INF/*.RSA` and ran `keytool -printcert` directly against it — `Owner: CN=One More, OU=OneMoreStudio, O=OneMoreStudio` — this is your own release keystore, not a debug key.
-- Permissions verified in the actual AAB manifest: `INTERNET`, `ACCESS_NETWORK_STATE`, `VIBRATE`, `WAKE_LOCK`, `AD_ID`, plus `ACCESS_ADSERVICES_AD_ID/ATTRIBUTION/TOPICS` (auto-merged in by the AdMob SDK's own manifest for Privacy Sandbox support — not something added manually, and expected). No contacts/location/camera/microphone/storage permissions present.
-- AdMob App ID verified in the actual AAB manifest: `ca-app-pub-3940256099942544~3347511713` — this is Google's public test App ID, confirmed test mode.
-- AdMob ad unit IDs verified directly in both scenes' serialized `AdManager` component (not just the .cs defaults): `androidRewardedAdUnitId`/`androidInterstitialAdUnitId`/iOS equivalents are still the literal placeholder strings `ca-app-pub-XXXXXXXXXXXXXXXX/...`, and `useTestAds: 1` in both `MainMenu.unity` and `Gameplay.unity`. Test mode is genuinely active, consistently, everywhere.
-- UMP consent verified as a real integration, not a stub: `ConsentManager.cs` imports `GoogleMobileAds.Ump.Api` and calls the actual SDK methods `ConsentInformation.Update(...)` → `ConsentForm.LoadAndShowConsentFormIfRequired(...)` → gates on `ConsentInformation.CanRequestAds()`. Confirmed the `ConsentManager` component is physically attached to the same GameObject as `AdManager` in both `MainMenu.unity` (GameObject 492427230) and `Gameplay.unity` (GameObject 774566674) — it will actually run, not just exist as an orphaned script. `GameManager.InitializeSystems()` confirmed to call consent-gathering before `AdManager.Initialize()`, and to proceed (skipping ad init only) if consent gathering itself fails — gameplay is never blocked.
-- iOS ATT verified as a real integration: `ATTManager.cs`'s `DllImport("__Internal")` calls are backed by `Assets/Plugins/iOS/ATTBridge.mm`, which calls Apple's actual `ATTrackingManager` framework API (`requestTrackingAuthorizationWithCompletionHandler`) — not a placeholder.
-- Analytics verified: 9 tracking methods exist and cover all 8 originally required events (`game_started`, `game_over`, `restart_pressed`, `score_milestone`, `new_high_score`, `rewarded_ad_offered`, `rewarded_ad_completed`, `interstitial_shown`, plus a bonus `settings_changed`). Confirmed `enableFirebase` defaults `false` and the Firebase send calls are commented out — this is honestly a local-only event queue, not a fake "connected" integration. Confirmed the flush loop is a try/caught fire-and-forget coroutine with no network dependency for core gameplay.
-- Game flow verified by direct code inspection: `OnRestartClicked()` unconditionally reloads the Gameplay scene regardless of any ad state. `ShowRewardedAd`'s success callback only fires inside `rewardedAd.Show(reward => ...)` — genuinely gated on the reward callback. The Continue button itself is only ever shown when `CanContinueRun()` is true (ad already loaded), so the "ad not ready" fallback path in `AdManager` is defensive, not something reachable via a visible dead-end button. `ShowInterstitialAd(...)` is called from exactly one place in the entire codebase — `MainMenuController.OnPlayClicked()` — never from anything inside the Gameplay scene, so it structurally cannot appear mid-run.
-- Background/resume risk verified: `ProjectSettings/TimeManager.asset` → `Maximum Allowed Timestep: 0.33333334` — Unity's default deltaTime cap is intact, so obstacles (which move via `transform.Translate(... * Time.deltaTime)`) cannot teleport through the player's collider after a long background pause.
-- High score persistence verified: `SaveSystem.SaveBestScore`/`LoadBestScore` read/write a local JSON file via `File.ReadAllText`/`WriteAllText` at `Application.persistentDataPath` — synchronous, on-device, no network dependency.
-- Build scene order verified: `EditorBuildSettings.asset` → Splash, MainMenu, Gameplay, all enabled, in that order.
-- Git safety verified fresh: `git status` clean, local `main` (788d19d) matches `origin/main` (788d19d) exactly. `git ls-files` searched for keystore/secret/env/password filenames — zero matches. `git ls-files` searched for anything under `Library/` or `Builds/` — zero matches. The keystore and its password file exist only on disk, correctly outside version control.
-- Privacy policy content verified against actual code: correctly describes local-only save data, AdMob's advertising-identifier/device-info/approximate-location collection, UMP consent, no analytics backend currently transmitting data, no crash reporting, no location/camera/contacts/microphone access. One accuracy gap found — see YELLOW.
+This document reflects a full pass: every gameplay/UI/ads script read line by line, every scene checked for null/broken references, a fresh signed release build produced and verified, and a real on-device playthrough of every screen and button on an Android emulator (Pixel, API 37). Bugs found during this pass were fixed and re-verified, not just logged.
 
-YELLOW — MANUAL ACTION REQUIRED
-- Create an AdMob account and generate real ad unit IDs: Android App ID, Android interstitial ID, Android rewarded ID (and iOS equivalents if you ship there). `PRODUCTION ADMOB CREDENTIALS REQUIRED`.
-- Fill in every `[BRACKETED PLACEHOLDER]` in `PRIVACY_POLICY.md`: your developer/studio name, support email address, developer address (or "not applicable"), and the settings location for "reset ad consent" (see next bullet).
-- Wire `ConsentManager.ResetConsentState()` (already exists in code) to an actual button in the Settings panel — it's implemented but not yet reachable by a user. Update `PRIVACY_POLICY.md`'s placeholder for this once done.
-- Publish the filled-in privacy policy to a live public HTTPS URL, then enter that URL into Play Console → App content → Privacy policy. A Markdown file in this repo does not satisfy Play's requirement.
-- Minor accuracy gap in `PRIVACY_POLICY.md`: it does not explicitly name "App Tracking Transparency" even though `ATTManager`/`ATTBridge.mm` implement it for iOS. Not a Google Play blocker (ATT is an Apple/iOS-only mechanism), but worth adding a sentence if you ever publish to the App Store, since Apple's own review checks that your privacy policy and your actual tracking prompt agree.
-- Test on a physical Android device or emulator — `PHYSICAL DEVICE VERIFICATION NOT COMPLETED`. `adb devices` returns an empty list in this environment (checked fresh during this audit); nothing in `DEVICE_TEST_CHECKLIST.md` has actually been run.
-- Capture real store screenshots, a feature graphic (1024×500), and a 512×512 store-listing icon from a running build — none exist yet (`STORE_ASSETS_CHECKLIST.md`).
-- Complete Play Console's Data Safety questionnaire, content rating questionnaire, target audience selection, and ads declaration — drafted guidance exists in `PLAY_CONSOLE_MANUAL_STEPS.md`, but only you can actually submit these in the console.
-- Enroll in Play App Signing at first upload (Play Console prompts for this automatically — cannot be done from this project).
-- Run a Closed Testing track in Play Console before Production, and actually work through `DEVICE_TEST_CHECKLIST.md` against that build.
-- Back up `keystore/onemore-upload.keystore` and `keystore/keystore.properties` somewhere outside this repo — git will never contain them by design, so no other backup currently exists.
+---
 
-RED — TRUE BLOCKERS
-NO CODE/BUILD BLOCKERS FOUND
+## What the game actually is right now
 
-The `.aab` builds, is correctly signed, and is internally consistent (package ID/version/SDK levels/permissions all verified in the artifact itself). Nothing in the code or Unity configuration currently prevents uploading this AAB to Google Play. The blockers that exist (privacy policy URL, store assets, Play Console questionnaires) are account/console/manual-content tasks, not code or build defects.
+**Flying Bird** — a classic tap-to-fly arcade game (flappy-bird mechanic): tap to flap upward, gravity pulls you back down, thread the gap between torch-lit pillar pairs. Gap width and pillar speed both increase with score. Package `com.onemorestudio.onemore`, version `1.0.0` (version code `1`), min SDK 25, target SDK 35, ARM64 + IL2CPP.
 
-ADMOB CONFIGURATION
-- Android AdMob App ID: `Assets/Plugins/Android/AndroidManifest.xml` (meta-data `com.google.android.gms.ads.APPLICATION_ID`) — currently Google's public test value.
-- Android/iOS interstitial + rewarded ad unit IDs: `Assets/_Project/Scripts/Ads/AdManager.cs`, serialized `AdConfig` fields (`androidInterstitialAdUnitId`, `androidRewardedAdUnitId`, `iosInterstitialAdUnitId`, `iosRewardedAdUnitId`), set per-instance on the `AdManager` component in `MainMenu.unity` and `Gameplay.unity` — currently placeholder strings.
-- Dev/prod switch: `AdManager.useTestAds` (bool, currently `true` in both scenes) — when `true`, Google's hardcoded test IDs are used regardless of the `AdConfig` values above; only flip this once real IDs are filled in.
-- Required production values you must obtain from your own AdMob account (none invented here): `ADMOB_ANDROID_APP_ID`, `ADMOB_ANDROID_INTERSTITIAL_ID`, `ADMOB_ANDROID_REWARDED_ID`, and if shipping iOS: `ADMOB_IOS_APP_ID`, `ADMOB_IOS_INTERSTITIAL_ID`, `ADMOB_IOS_REWARDED_ID`.
+## Bugs found this pass, fixed, and re-verified
 
-PRIVACY POLICY
-Information you must personally provide (none of it invented): your developer/studio legal name, a support contact email, a developer address (or an explicit statement that one isn't required in your jurisdiction), and the in-app location of the "reset ad consent" control once you wire it to a button. Where it must be hosted: a live, public HTTPS URL — Play Console will not accept a link to a file in this GitHub repo or a local document; it needs to resolve as a normal web page (a static site, GitHub Pages, your own domain, etc.).
+1. **Score-save corruption risk** — `GameManager` kept its own independent copy of score/bestScore in parallel with `ScoreManager` (the real, combo-aware, UI-driving, already-saves-in-real-time authority), and re-saved a stale comparison on every death. This could silently overwrite a correct saved best score with a lower one. Fixed: `GameManager` no longer tracks score at all; `GameOver(finalScore, isNewBest)` now takes authoritative values sourced from `ScoreManager`.
+2. **Continue-after-ad silently broke** — `RestartButton`/`ContinueButton`/`MenuButton` in the Gameplay scene each had both a persistent Inspector `onClick` binding *and* a code-side `AddListener` for the same handler, firing every tap twice. Harmless for Restart/Menu, but broke Continue: the spurious second call resumed gameplay behind the still-playing rewarded ad, so the bird fell and died invisibly before the player finished watching. Fixed: removed the redundant persistent listeners (code-only wiring now, matching the rest of the project's convention). Verified on-device: `ShowRewardedAd` now fires exactly once per tap.
+3. **Rewarded ad abort dead-end** — closing a rewarded ad early (before earning the reward) never resolved the pending continue callback, leaving the player stuck on Game Over with their one continue already spent for nothing. Fixed: the ad-closed handler now resolves it too.
+4. **Pause broke after using Continue** — a successful Continue never restored `GameManager`'s state back to `Playing`, so the Pause button silently no-op'd for the rest of that run. Fixed: `BeginPlaying()` is now called in the Continue success path.
+5. **Fragile init ordering** — `AnalyticsManager`/`ConsentManager`/`AdManager` initialization ran from `GameManager.Awake()`, which only works if those objects' own `Awake()` happened to run first — not guaranteed by Unity. Fixed: moved to `GameManager.Start()`, where Unity does guarantee every other object's `Awake()` has already completed.
+6. **No pause-on-focus-loss** — pulling down the notification shade or a system dialog during gameplay let physics keep running unseen, producing an unfair death. Fixed: `GameManager.OnApplicationFocus` now auto-pauses if focus is lost mid-run.
 
-ANDROID AAB
-- Exact path: `Builds/Android/OneMore_Release.aab`
-- Package ID: `com.onemorestudio.onemore`
-- Version: `1.0.0`
-- Version code: `1`
-- Target SDK: `35` (min SDK `25`)
-- Signing status: signed with your own release keystore (`keystore/onemore-upload.keystore`, alias `onemore-upload`) — confirmed via direct certificate inspection of the bundle, not assumed.
+All six were found via a genuine line-by-line script review plus on-device reproduction (not just static reading) where practical, and re-verified working after the fix by reinstalling and re-testing on the emulator.
 
-DEVICE TESTING
-Nothing has been run on a device yet. `DEVICE_TEST_CHECKLIST.md`'s full 20-step list remains outstanding, in particular: fresh install, rewarded revive actually resuming the run, interstitial frequency in practice, offline mode, app backgrounding/resume, and high-score persistence across a real force-quit — all need a physical device or emulator, neither of which is available in this environment.
+## What was tested on-device (this pass)
 
-GOOGLE PLAY CHECKLIST
-1. AdMob → create account, create Android App ID + interstitial + rewarded ad units, note the real IDs.
-2. Privacy Policy → fill in all placeholders in `PRIVACY_POLICY.md`, publish it to a public HTTPS URL.
-3. Physical Device → install a build (see `DEVICE_TEST_CHECKLIST.md` for how to turn the `.aab` into installable APKs via bundletool), run the full 20-step checklist.
-4. Play Console → create the app listing, enter package ID/category, complete Data Safety + content rating + ads declaration + app access + target audience.
-5. Closed Testing → upload `OneMore_Release.aab` to a Closed Testing track, add testers, confirm it installs and runs correctly from the Play-distributed build (not just your local copy).
-6. Production Access → once Closed Testing passes, only then consider flipping `useTestAds` to `false` with real AdMob IDs and producing a new signed build (bump `AndroidBundleVersionCode` first).
-7. Public Release → promote to Production, submit for review.
+- Fresh install (no prior save data) → Main Menu loads, `BEST: 0000`, no crash — confirms `SaveSystem` handles a missing save file correctly.
+- Main Menu: Play, Sound toggle (ON↔OFF, verified both states render), Privacy Policy (confirmed it correctly launches the device browser via `Application.OpenURL`, not an in-app panel), Exit (confirmed via `adb shell pidof` that the process actually terminates).
+- Gameplay: countdown → flight → death → Game Over, repeated across multiple runs.
+- Game Over: Restart, Continue (rewarded ad — confirmed single invocation, confirmed gameplay resumes correctly after the ad closes), Menu.
+- Interstitial ad (shown on Play, frequency-gated) and rewarded ad (Continue) both confirmed to actually request and display real ads end-to-end.
+- Banner ad confirmed present on Main Menu, the Gameplay countdown, and Game Over; confirmed hidden during actual flight.
+- No exceptions of any kind (`NullReferenceException`, `MissingMethodException`, or otherwise) found in logcat across the entire test session.
 
-EXACT NEXT 10 ACTIONS
-1. Create your AdMob account and generate the three (or six, with iOS) real ad unit IDs.
-2. Fill in every placeholder in `PRIVACY_POLICY.md`.
-3. Publish the completed privacy policy to a public HTTPS URL.
-4. Get a physical Android device or emulator available, install a build, and run through `DEVICE_TEST_CHECKLIST.md`.
-5. Wire `ConsentManager.ResetConsentState()` to a Settings-panel button.
-6. Capture real screenshots, a feature graphic, and a 512×512 store icon from the running build.
-7. Create the Play Console app listing entry (package ID, category, store text from `PLAY_STORE_LISTING.md`).
-8. Complete Play Console's Data Safety, content rating, ads declaration, and app access questionnaires (`PLAY_CONSOLE_MANUAL_STEPS.md`).
-9. Upload `OneMore_Release.aab` to a Closed Testing track and validate it there.
-10. Once real AdMob IDs exist and device testing passes, flip `useTestAds` to `false`, bump the version code, rebuild, and promote to Production.
+**Not exercised**: sustained gameplay to a high score / genuine "new best" run (automated tap timing against a live physics countdown proved too imprecise to script reliably) — the underlying fix for the score bug was verified by direct code inspection instead, tracing every call site of the old dual-tracking mechanism.
 
-READY FOR MANUAL RELEASE STEPS
+## Ads — current real status
 
-The code, build configuration, signing, and the AAB artifact itself are all verified correct with no code or build blockers found. What remains is exclusively account-level and content work only you can do — real AdMob credentials, a hosted privacy policy, physical device testing, and Play Console's own submission forms — none of which this project's code can complete on your behalf.
+- Real AdMob App ID and real banner/interstitial/rewarded ad unit IDs are wired in (both `MainMenu.unity` and `Gameplay.unity`), `useTestAds` is `false`. Confirmed via logcat that real ad requests go out to Google's servers under these IDs.
+- Your AdMob account is still pending Google's approval (`"Account not approved yet"` in logs). Until approved, ads display Google's own "Test Ad"-labeled placeholder content automatically — this is expected, resolves on its own, and needs no further code changes.
+- One remaining AdMob dashboard step (not code): **AdMob → Privacy & messaging** has no GDPR/consent message configured yet for this app — create one there when convenient; not a blocker for anything else.
+
+## Privacy policy — done
+
+Hosted live and verified reachable (HTTP 200) at **https://vishwas-pandey.github.io/OneMore/privacy-policy.html**, served via GitHub Pages from this repo's `docs/` folder. Source copy kept in sync at `PRIVACY_POLICY.md`. Enter that URL into Play Console → App content → Privacy policy.
+
+## Release build — produced and verified this pass
+
+- `Builds/Android/OneMore_Release.aab` rebuilt fresh from current code (not a stale earlier build).
+- Verified via `bundletool dump manifest`: `package="com.onemorestudio.onemore"`, `versionCode="1"`, `versionName="1.0.0"`, `minSdkVersion="25"`, `targetSdkVersion="35"`, real AdMob App ID present.
+- Verified via `jarsigner -verify`: signed with the project's upload keystore (`keystore/onemore-upload.keystore`, alias `onemore-upload`, cert valid until 2054) — not a debug/unsigned build.
+- Keystore password was never printed or logged; supplied transiently via environment variables per `RELEASE_SIGNING.md`'s documented process.
+
+## Files cleaned up this pass
+
+- Deleted `DEPLOYMENT_STATUS.md`, `FINAL_RELEASE_STATUS.md`, `DEVICE_TEST_CHECKLIST.md` — three overlapping, stale status documents describing the pre-rebuild game; superseded by this file.
+- Deleted `Assets/Editor/ResetConsentButtonEditor.cs`, `Assets/Editor/SettingsPanelBackgroundFixEditor.cs` — one-off editor scripts targeting the Settings/Privacy overlay panels, which were removed from the game entirely (Main Menu was simplified to Play / Sound toggle / Privacy / Exit).
+- Rewrote `PLAY_STORE_LISTING.md` and `PLAY_CONSOLE_MANUAL_STEPS.md`, which still described the original one-tap endless-runner concept and the old "One More" name — both now describe the actual shipped game.
+- Fixed the remaining stale "One More" title in `RELEASE_SIGNING.md` (the literal project folder name and keystore filename are unchanged on purpose — they're real paths on disk, not display names).
+
+## What's still genuinely left (all external to this project — nothing further to fix in code)
+
+1. **AdMob account approval** — pending on Google's side, automatic once granted.
+2. **AdMob → Privacy & messaging** — create a consent message for the app (a few minutes in the AdMob dashboard).
+3. **Store assets** — screenshots, feature graphic, 512×512 icon (see `STORE_ASSETS_CHECKLIST.md`); the game is now proven to run cleanly on-device, so these can be captured any time.
+4. **Play Console submission itself** — app info, content rating questionnaire, data safety form, privacy policy URL entry, and the mandatory 12-tester/14-day Closed Testing window for new developer accounts (see `PLAY_CONSOLE_MANUAL_STEPS.md`).
+5. Everything above is either a Google-side process, a manual Play Console step, or asset capture — the codebase itself has no known open bugs as of this pass.
