@@ -41,20 +41,31 @@ public class ConsentManager : MonoBehaviour
 
         ConsentInformation.Update(request, updateError =>
         {
-            if (updateError != null)
+            // UMP callbacks (like the AdMob ones) can fire off Unity's main
+            // thread - confirmed on-device that a same-shaped AdMob callback
+            // crashed calling SceneManager.LoadScene from here. Route through
+            // MainThreadDispatcher so anything onResolved does (it goes on to
+            // call AdManager.Initialize) runs safely on the main thread.
+            MainThreadDispatcher.Enqueue(() =>
             {
-                Debug.LogWarning($"[ConsentManager] ConsentInformation.Update failed: {updateError.Message}");
-                onResolved?.Invoke();
-                return;
-            }
-
-            ConsentForm.LoadAndShowConsentFormIfRequired(showError =>
-            {
-                if (showError != null)
+                if (updateError != null)
                 {
-                    Debug.LogWarning($"[ConsentManager] Consent form failed to load/show: {showError.Message}");
+                    Debug.LogWarning($"[ConsentManager] ConsentInformation.Update failed: {updateError.Message}");
+                    onResolved?.Invoke();
+                    return;
                 }
-                onResolved?.Invoke();
+
+                ConsentForm.LoadAndShowConsentFormIfRequired(showError =>
+                {
+                    MainThreadDispatcher.Enqueue(() =>
+                    {
+                        if (showError != null)
+                        {
+                            Debug.LogWarning($"[ConsentManager] Consent form failed to load/show: {showError.Message}");
+                        }
+                        onResolved?.Invoke();
+                    });
+                });
             });
         });
     }

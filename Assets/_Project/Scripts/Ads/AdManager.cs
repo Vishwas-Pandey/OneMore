@@ -64,9 +64,12 @@ public class AdManager : MonoBehaviour
 
         MobileAds.Initialize(initStatus =>
         {
-            if (logAdEvents) Debug.Log("[AdManager] Mobile Ads SDK initialized.");
-            LoadRewardedAd();
-            LoadInterstitialAd();
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.Log("[AdManager] Mobile Ads SDK initialized.");
+                LoadRewardedAd();
+                LoadInterstitialAd();
+            });
         });
     }
 
@@ -117,15 +120,18 @@ public class AdManager : MonoBehaviour
         AdRequest request = new AdRequest();
         RewardedAd.Load(RewardedAdUnitId(), request, (ad, error) =>
         {
-            if (error != null || ad == null)
+            MainThreadDispatcher.Enqueue(() =>
             {
-                if (logAdEvents) Debug.LogWarning($"[AdManager] Rewarded ad failed to load: {error}");
-                return;
-            }
+                if (error != null || ad == null)
+                {
+                    if (logAdEvents) Debug.LogWarning($"[AdManager] Rewarded ad failed to load: {error}");
+                    return;
+                }
 
-            rewardedAd = ad;
-            RegisterRewardedEventHandlers(rewardedAd);
-            if (logAdEvents) Debug.Log("[AdManager] Rewarded ad loaded.");
+                rewardedAd = ad;
+                RegisterRewardedEventHandlers(rewardedAd);
+                if (logAdEvents) Debug.Log("[AdManager] Rewarded ad loaded.");
+            });
         });
     }
 
@@ -142,15 +148,18 @@ public class AdManager : MonoBehaviour
         AdRequest request = new AdRequest();
         InterstitialAd.Load(InterstitialAdUnitId(), request, (ad, error) =>
         {
-            if (error != null || ad == null)
+            MainThreadDispatcher.Enqueue(() =>
             {
-                if (logAdEvents) Debug.LogWarning($"[AdManager] Interstitial ad failed to load: {error}");
-                return;
-            }
+                if (error != null || ad == null)
+                {
+                    if (logAdEvents) Debug.LogWarning($"[AdManager] Interstitial ad failed to load: {error}");
+                    return;
+                }
 
-            interstitialAd = ad;
-            RegisterInterstitialEventHandlers(interstitialAd);
-            if (logAdEvents) Debug.Log("[AdManager] Interstitial ad loaded.");
+                interstitialAd = ad;
+                RegisterInterstitialEventHandlers(interstitialAd);
+                if (logAdEvents) Debug.Log("[AdManager] Interstitial ad loaded.");
+            });
         });
     }
 
@@ -170,9 +179,12 @@ public class AdManager : MonoBehaviour
 
             rewardedAd.Show(reward =>
             {
-                onRewardedAdSuccess?.Invoke();
-                onRewardedAdSuccess = null;
-                AnalyticsManager.TrackRewardedAdCompleted();
+                MainThreadDispatcher.Enqueue(() =>
+                {
+                    onRewardedAdSuccess?.Invoke();
+                    onRewardedAdSuccess = null;
+                    AnalyticsManager.TrackRewardedAdCompleted();
+                });
             });
         }
         else
@@ -219,14 +231,20 @@ public class AdManager : MonoBehaviour
     {
         ad.OnAdFullScreenContentClosed += () =>
         {
-            if (logAdEvents) Debug.Log("[AdManager] Rewarded ad closed.");
-            LoadRewardedAd();
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.Log("[AdManager] Rewarded ad closed.");
+                LoadRewardedAd();
+            });
         };
         ad.OnAdFullScreenContentFailed += (AdError error) =>
         {
-            if (logAdEvents) Debug.LogWarning($"[AdManager] Rewarded ad failed to show: {error}");
-            onRewardedAdSuccess?.Invoke();
-            onRewardedAdSuccess = null;
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.LogWarning($"[AdManager] Rewarded ad failed to show: {error}");
+                onRewardedAdSuccess?.Invoke();
+                onRewardedAdSuccess = null;
+            });
         };
     }
 
@@ -234,16 +252,22 @@ public class AdManager : MonoBehaviour
     {
         ad.OnAdFullScreenContentClosed += () =>
         {
-            if (logAdEvents) Debug.Log("[AdManager] Interstitial ad closed.");
-            _pendingInterstitialComplete?.Invoke();
-            _pendingInterstitialComplete = null;
-            LoadInterstitialAd();
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.Log("[AdManager] Interstitial ad closed.");
+                _pendingInterstitialComplete?.Invoke();
+                _pendingInterstitialComplete = null;
+                LoadInterstitialAd();
+            });
         };
         ad.OnAdFullScreenContentFailed += (AdError error) =>
         {
-            if (logAdEvents) Debug.LogWarning($"[AdManager] Interstitial ad failed to show: {error}");
-            _pendingInterstitialComplete?.Invoke();
-            _pendingInterstitialComplete = null;
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                if (logAdEvents) Debug.LogWarning($"[AdManager] Interstitial ad failed to show: {error}");
+                _pendingInterstitialComplete?.Invoke();
+                _pendingInterstitialComplete = null;
+            });
         };
     }
 
