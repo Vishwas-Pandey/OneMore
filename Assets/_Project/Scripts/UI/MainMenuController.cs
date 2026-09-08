@@ -19,6 +19,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button musicToggleButton;
     [SerializeField] private Button hapticsToggleButton;
     [SerializeField] private Button exitButton;
+    [SerializeField] private Button resetAdConsentButton;
 
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI bestScoreText;
@@ -109,6 +110,27 @@ public class MainMenuController : MonoBehaviour
         if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
         if (hapticsToggleButton != null) hapticsToggleButton.onClick.AddListener(ToggleHaptics);
         if (exitButton != null) exitButton.onClick.AddListener(OnExitClicked);
+        if (resetAdConsentButton != null) resetAdConsentButton.onClick.AddListener(OnResetAdConsentClicked);
+    }
+
+    /// <summary>
+    /// Referenced by the privacy policy (Section 8, "Your choices") as the
+    /// place users can withdraw/change their ad-personalization consent.
+    /// Resets UMP's stored consent state, then immediately re-runs the
+    /// gathering flow so the platform-appropriate form (if any) shows again
+    /// right away rather than requiring an app restart.
+    /// </summary>
+    public void OnResetAdConsentClicked()
+    {
+        PlayClickSound();
+        ConsentManager.Instance?.ResetConsentState();
+        ConsentManager.Instance?.GatherConsent(() =>
+        {
+            if (ConsentManager.Instance != null && ConsentManager.Instance.CanRequestAds())
+            {
+                AdManager.Instance?.Initialize();
+            }
+        });
     }
 
     public void OnExitClicked()
