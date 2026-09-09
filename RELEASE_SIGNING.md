@@ -50,7 +50,9 @@ Or, from the Unity Editor GUI: **Build → Android → Release App Bundle (Play 
 
 ## Version code bumping
 
-`AndroidBundleVersionCode` in `ProjectSettings/ProjectSettings.asset` is currently `1`. **Every future Play Store upload requires a strictly higher integer than any previously-uploaded version** — Play Console rejects a re-upload with the same or lower code. Bump this by hand (or via a small build-time increment step, not currently automated) before each new release build. `PlayerSettings.bundleVersion` (`1.0.0`) is the human-readable version string and has no such monotonic requirement, but should still make sense alongside the version code (e.g. `1.0.1` → code `2`).
+`AndroidBundleVersionCode` in `ProjectSettings/ProjectSettings.asset` is currently `2` (bumped from `1` on 2026-09-09 after Google rejected a re-upload of code `1` during Closed Testing submission — Play permanently reserves a version code the moment a bundle using it is fully processed, even in a draft release). **Every future Play Store upload requires a strictly higher integer than any previously-uploaded version** — Play Console rejects a re-upload with the same or lower code. Bump this by hand (or via a small build-time increment step, not currently automated) before each new release build. `PlayerSettings.bundleVersion` (`1.0.0`) is the human-readable version string and has no such monotonic requirement, but should still make sense alongside the version code (e.g. `1.0.1` → code `3`).
+
+Also on 2026-09-09: `AndroidTargetSdkVersion` was bumped from `35` to `36` — Google now requires target API level 36 minimum for new Closed Testing submissions (this rejected the first upload attempt outright). `compileSdkVersion` follows automatically and is confirmed as `36` in the built AAB's manifest.
 
 ## Play App Signing (manual, one-time, in Play Console)
 

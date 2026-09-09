@@ -46,9 +46,14 @@ Hosted live and verified reachable (HTTP 200) at **https://vishwas-pandey.github
 ## Release build — produced and verified this pass
 
 - `Builds/Android/OneMore_Release.aab` rebuilt fresh from current code (not a stale earlier build).
-- Verified via `bundletool dump manifest`: `package="com.onemorestudio.onemore"`, `versionCode="1"`, `versionName="1.0.0"`, `minSdkVersion="25"`, `targetSdkVersion="35"`, real AdMob App ID present.
+- Verified via `bundletool dump manifest`: `package="com.onemorestudio.onemore"`, `versionCode="2"`, `versionName="1.0.0"`, `minSdkVersion="25"`, `targetSdkVersion="36"`, real AdMob App ID present.
 - Verified via `jarsigner -verify`: signed with the project's upload keystore (`keystore/onemore-upload.keystore`, alias `onemore-upload`, cert valid until 2054) — not a debug/unsigned build.
 - Keystore password was never printed or logged; supplied transiently via environment variables per `RELEASE_SIGNING.md`'s documented process.
+- `versionCode` and `targetSdkVersion` were bumped (from 1→2 and 35→36) during actual Play Console submission on 2026-09-09 — Google rejected the first submission attempt outright on both counts (see `RELEASE_SIGNING.md` for details). This is the exact bundle now sitting in Google's review queue for Closed Testing.
+
+## Play Console submission — done this pass
+
+Full store listing, all app content declarations (ads, content rating, target audience, data safety, government/financial/health N/A declarations, advertising ID), app category (Arcade) + contact details, countries/regions (all + rest of world), and a tester email list were all set up directly in Play Console. The Closed Testing release (v2, 1.0.0) was uploaded and **submitted for Google's review** on 2026-09-09. See `PLAY_CONSOLE_MANUAL_STEPS.md` for what's left (adding more testers to reach 12, waiting out the review and the 14-day window).
 
 ## Files cleaned up this pass
 

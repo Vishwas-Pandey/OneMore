@@ -60,13 +60,17 @@ Since the app has no login/account system, declare **"All functionality is avail
 
 Your choice — no code in this project restricts geography. If you enable ads in the EEA/UK, the UMP consent flow (already implemented) is what makes that legally viable; nothing further to configure in-app for regional availability itself.
 
-## 9. Closed testing (required for new developer accounts)
+## 9. Closed testing (required for new developer accounts) — DONE, awaiting Google review
 
-Google requires new/personal Play Console developer accounts to run a **Closed testing** track with at least 12 opted-in testers for 14 continuous days before Production is unlocked. Sequence:
-1. Upload `Builds/Android/OneMore_Release.aab` to a Closed testing track.
-2. Add at least 12 testers by email; they must actually opt in and install.
-3. Let the 14-day window run — this is a Play policy timer, not something any tooling can skip.
-4. Only promote to Production once that window passes and testing looks clean.
+Google requires new/personal Play Console developer accounts to run a **Closed testing** track with at least 12 opted-in testers for 14 continuous days before Production is unlocked.
+
+**Status as of 2026-09-09:**
+1. ✅ Uploaded `OneMore_Release.aab` (v2, targetSdk 36) to the Closed Testing - Alpha track.
+2. ✅ Countries/regions: all countries + rest of world targeted.
+3. ✅ Tester email list "Flying Bird Testers" created (currently just 1 email — **you need to add at least 11 more** for the 12-tester minimum to unlock Production; use the "Join on the web" link shown on the Testers tab of the Closed Testing track to let people self-enroll without needing to collect emails upfront).
+4. ✅ Submitted for Google's review (15 changes, submitted 2026-09-09) — typically completed within a few hours to 7 days.
+5. ⏳ Once approved and 12 testers have opted in: the 14-day continuous testing window starts/continues. This is a Play policy timer — nothing can skip it.
+6. Only promote to Production once that window passes and testing looks clean.
 
 ## 10. Production release
 
@@ -87,7 +91,9 @@ Already drafted in `PLAY_STORE_LISTING.md` (short/full description, feature bull
 
 ## Summary — what's genuinely left before Production submission
 
-1. **Store screenshots + feature graphic + 512×512 store icon** (see `STORE_ASSETS_CHECKLIST.md`) — need to be captured from a running build.
-2. **AdMob account approval** — pending on Google's side; ads are wired with real IDs already and will start serving real inventory automatically once approved.
-3. **The 12-tester / 14-day Closed testing window** (Section 9) — a Play policy requirement for new developer accounts, not something this project can shortcut.
-4. Everything else in this document is data-entry you can complete directly in Play Console once you're ready.
+1. ✅ ~~Store screenshots + feature graphic + 512×512 store icon~~ — done, all uploaded to the store listing (see `StoreAssets/`).
+2. **Add at least 11 more testers** to the "Flying Bird Testers" email list (or share the web join-link) — only 1 email is on it right now, need 12 total.
+3. **AdMob account approval** — pending on Google's side; ads are wired with real IDs already and will start serving real inventory automatically once approved.
+4. **Google's review of the Closed Testing submission** — submitted 2026-09-09, typically a few hours to 7 days.
+5. **The 12-tester / 14-day Closed testing window** (Section 9) — a Play policy requirement for new developer accounts, not something this project can shortcut. Starts counting once 12 testers have opted in.
+6. Everything else in this document is data-entry already completed directly in Play Console.
